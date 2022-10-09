@@ -42,11 +42,8 @@ object EncryptionManager {
         encryptionResult: FileEncryptionResult,
         file: File
     ) {
-        // DERIVE key (from password and salt)
         val key: SecretKey = generateSecretKey(password, encryptionResult.salt)
-        // READ ENCRYPTED FILE
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(16 * 8, encryptionResult.nonce)
+        val (cipher, spec) = setupCipher(encryptionResult.nonce)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
         val cipherInputStream = CipherInputStream(file.inputStream(), cipher)
@@ -63,29 +60,18 @@ object EncryptionManager {
     }
 
     fun encryptSteam(inputstream: InputStream, file: File): Pair<String, FileEncryptionResult> {
-        // GENERATE password
-        val keyGen = KeyGenerator.getInstance("AES")
-        keyGen.init(256)
-        val password = Base64.getEncoder().encodeToString(keyGen.generateKey().encoded)
-
-        // GENERATE random salt
+        val password = generateRandomPassword()
         val salt = generateSalt()
 
-        // DERIVE key (from password and salt)
         val key: SecretKey = generateSecretKey(password, salt)
 
-        // GENERATE random nonce (number used once)
         val nonce = createNonce()
 
-        // SET UP CIPHER for encryption
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(16 * 8, nonce)
+        val (cipher, spec) = setupCipher(nonce)
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
-        // SET UP HASHING OF FILE
         val digest = getMessageDigest()
 
-        // SET UP OUTPUT STREAM and write content of String
         CipherOutputStream(file.outputStream(), cipher).use { encryptedOutputStream ->
             val buffer = ByteArray(cipher.blockSize)
             var nread: Int
@@ -106,20 +92,21 @@ object EncryptionManager {
         )
     }
 
+    private fun generateRandomPassword(): String {
+        val keyGen = KeyGenerator.getInstance("AES")
+        keyGen.init(256)
+        return Base64.getEncoder().encodeToString(keyGen.generateKey().encoded)
+    }
+
 
     fun encryptPassword(password: String): PasswordEncryptionResult {
-        // GENERATE random salt
         val salt = generateSalt()
 
-        // DERIVE key (from password and salt)
         val key: SecretKey = generateSecretKey(password, salt)
 
-        // GENERATE random nonce (number used once)
         val nonce = createNonce()
 
-        // SET UP CIPHER for encryption
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(16 * 8, nonce)
+        val (cipher, spec) = setupCipher(nonce)
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
         val messageDigest = getMessageDigest()
@@ -149,7 +136,6 @@ object EncryptionManager {
     }
 
     fun decryptString(encryptionResult: PasswordEncryptionResult, password: String): String {
-        // DERIVE key (from password and salt)
         val key: SecretKey = generateSecretKey(password, encryptionResult.salt)
 
         val messageDigest = getMessageDigest()
@@ -158,12 +144,16 @@ object EncryptionManager {
             throw IntegrityFailedException("Integrity check failed.")
         }
 
-        // SET UP CIPHER for decryption
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(16 * 8, encryptionResult.nonce)
+        val (cipher, spec) = setupCipher(encryptionResult.nonce)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
         return cipher.doFinal(encryptionResult.encryptedPassword).decodeToString()
+    }
+
+    private fun setupCipher(nonce: ByteArray): Pair<Cipher, GCMParameterSpec> {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val spec = GCMParameterSpec(16 * 8, nonce)
+        return Pair(cipher, spec)
     }
 
     private fun getMessageDigest(): MessageDigest = MessageDigest.getInstance("SHA-512")
@@ -172,7 +162,6 @@ object EncryptionManager {
         val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
         val passwordBasedEncryptionKeySpec: KeySpec = PBEKeySpec(password.toCharArray(), salt, 10000, 256)
         val secretKeyFromPBKDF2 = secretKeyFactory.generateSecret(passwordBasedEncryptionKeySpec)
-        val key: SecretKey = SecretKeySpec(secretKeyFromPBKDF2.encoded, "AES")
-        return key
+        return SecretKeySpec(secretKeyFromPBKDF2.encoded, "AES")
     }
 }
