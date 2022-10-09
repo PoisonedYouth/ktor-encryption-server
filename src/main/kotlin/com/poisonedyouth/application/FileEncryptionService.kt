@@ -31,7 +31,7 @@ class FileEncryptionServiceImpl(
                 val name = part.originalFileName ?: RandomStringUtils.randomAlphabetic(16)
                 val encryptedName = UUID.randomUUID().toString()
                 val file =
-                    File("$UPLOAD_DIRECTORY$encryptedName")
+                    File("$UPLOAD_DIRECTORY/$encryptedName")
 
                 part.streamProvider().use { its ->
                     val encryptionResult = EncryptionManager.encryptSteam(its, file)

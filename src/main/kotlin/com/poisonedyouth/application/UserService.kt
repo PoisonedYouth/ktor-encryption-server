@@ -2,11 +2,14 @@ package com.poisonedyouth.application
 
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.application.ErrorCode.AUTHENTICATION_FAILURE
+import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
 import com.poisonedyouth.application.ErrorCode.PERSISTENCE_FAILURE
+import com.poisonedyouth.application.ErrorCode.USER_ALREADY_EXIST
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
+import com.poisonedyouth.security.IntegrityFailedException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -22,6 +25,9 @@ class UserServiceImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun save(userDto: UserDto): ApiResult<String> {
+        if (userRepository.findByUsername(userDto.username) != null) {
+            return ApiResult.Failure(USER_ALREADY_EXIST, "User with username '${userDto.username}' already exist.")
+        }
         return try {
             val encryptionResult = EncryptionManager.encryptPassword(userDto.password)
 
@@ -46,9 +52,9 @@ class UserServiceImpl(
             logger.error("User with username '${userDto.username}' does not exist.")
             return ApiResult.Failure(USER_NOT_FOUND, "User with username '${userDto.username}' does not exist.")
         }
-        try {
+        return try {
             val decryptedPassword = EncryptionManager.decryptString(existingUser.encryptionResult, userDto.password)
-            return ApiResult.Success(
+            ApiResult.Success(
                 if (decryptedPassword != userDto.password) {
                     logger.error("Password for user with username '${userDto.username}' is wrong.")
                     false
@@ -56,9 +62,15 @@ class UserServiceImpl(
                     true
                 }
             )
+        } catch (e: IntegrityFailedException) {
+            logger.error("Integrity check for user with username '${userDto.username}' failed.", e)
+            ApiResult.Failure(
+                INTEGRITY_CHECK_FAILED,
+                "Integrity check for user with username '${userDto.username}' failed."
+            )
         } catch (e: Exception) {
             logger.error("Authentication of user with username '${userDto.username}' failed.", e)
-            return ApiResult.Failure(
+            ApiResult.Failure(
                 AUTHENTICATION_FAILURE,
                 "Authentication of user with username '${userDto.username}' failed."
             )

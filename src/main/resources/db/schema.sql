@@ -1,4 +1,4 @@
-CREATE TABLE `user`
+CREATE TABLE `app_user`
 (
     `id`           LONG PRIMARY KEY AUTO_INCREMENT NOT NULL,
     `username`     VARCHAR2 UNIQUE                 NOT NULL,
@@ -21,5 +21,5 @@ CREATE TABLE `upload_file`
     `iv`                 BYTEA                           NOT NULL,
     `nonce`              BYTEA                           NOT NULL,
     `user_id`            LONG                            NOT NULL,
-    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON UPDATE cascade ON DELETE cascade
+    FOREIGN KEY (`user_id`) REFERENCES `app_user` (`id`) ON UPDATE cascade ON DELETE cascade
 )

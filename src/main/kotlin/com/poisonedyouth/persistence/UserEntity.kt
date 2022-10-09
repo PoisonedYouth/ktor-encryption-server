@@ -21,7 +21,7 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<UserEntity>(UserTable)
 }
 
-object UserTable : LongIdTable("user", "id") {
+object UserTable : LongIdTable("app_user", "id") {
     val username = varchar("username", DEFAULT_VARCHAR_COLUMN_LENGTH).uniqueIndex()
     val password = binary("password")
     val salt = binary("salt")
