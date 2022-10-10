@@ -62,11 +62,11 @@ class FileEncryptionServiceImpl(
                     uploadFile.encryptionResult,
                     File("$UPLOAD_DIRECTORY/${uploadFile.encryptedFilename}"),
                     outputFile
+                )
             } catch (e: Exception) {
-                outputFile.deleteOnExit()
+                outputFile.delete()
                 throw e
             }
-            )
         } else {
             error("Could not find file '${downloadFileDto.filename}")
         }

@@ -51,7 +51,7 @@ fun Application.configureRouting() {
                 when (result) {
                     is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
                         .also { result.value.delete() }
-                    is Failure -> call.respond(Companion.InternalServerError, result.errorCode)                }
+                    is Failure -> call.respond(Companion.InternalServerError, result.errorMessage)                }
             }
         }
     }
