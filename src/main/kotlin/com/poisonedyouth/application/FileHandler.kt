@@ -4,18 +4,21 @@ import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.api.UploadFileDto
 import com.poisonedyouth.application.ErrorCode.ENCRYPTION_FAILURE
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
+import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
+import com.poisonedyouth.security.IntegrityFailedException
 import io.ktor.http.content.MultiPartData
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.io.OutputStream
 
 interface FileHandler {
 
     suspend fun upload(username: String, multiPartData: MultiPartData): ApiResult<List<UploadFileDto>>
-    suspend fun download(outputStream: OutputStream, downloadFileDto: DownloadFileDto): ApiResult<Unit>
+    suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File>
 }
 
 class FileHandlerImpl(
@@ -54,10 +57,15 @@ class FileHandlerImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun download(outputStream: OutputStream, downloadFileDto: DownloadFileDto): ApiResult<Unit> {
+    override suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File> {
         return try {
-            fileEncryptionService.decryptFile(outputStream, downloadFileDto)
-            ApiResult.Success(Unit)
+            ApiResult.Success(fileEncryptionService.decryptFile(downloadFileDto))
+        } catch (e: IntegrityFailedException) {
+            logger.error("Integrity check for file '${downloadFileDto.filename}' failed.",e)
+            ApiResult.Failure(
+                INTEGRITY_CHECK_FAILED,
+                "Integrity check for file '${downloadFileDto.filename}' failed."
+            )
         } catch (e: IllegalStateException) {
             logger.error("Download file '${downloadFileDto.filename}' not found.", e)
             ApiResult.Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")

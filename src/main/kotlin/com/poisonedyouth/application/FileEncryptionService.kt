@@ -10,15 +10,15 @@ import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
 import org.apache.commons.lang3.RandomStringUtils
 import java.io.File
-import java.io.OutputStream
 import java.util.*
 
 interface FileEncryptionService {
     suspend fun encryptFiles(multipart: MultiPartData): List<Pair<String, UploadFile>>
-    suspend fun decryptFile(outputStream: OutputStream, downloadFileDto: DownloadFileDto)
+    suspend fun decryptFile(downloadFileDto: DownloadFileDto): File
 }
 
 private const val UPLOAD_DIRECTORY = "./uploads"
+private const val DOWNLOAD_DIRECTORY = "./downloads"
 
 class FileEncryptionServiceImpl(
     private val uploadFileRepository: UploadFileRepository
@@ -52,14 +52,20 @@ class FileEncryptionServiceImpl(
         return resultList
     }
 
-    override suspend fun decryptFile(outputStream: OutputStream, downloadFileDto: DownloadFileDto) {
+    override suspend fun decryptFile(downloadFileDto: DownloadFileDto): File {
         val uploadFile = uploadFileRepository.findBy(downloadFileDto.filename)
         if (uploadFile != null) {
-            EncryptionManager.decryptStream(
-                outputStream,
-                downloadFileDto.password,
-                uploadFile.encryptionResult,
-                File("$UPLOAD_DIRECTORY/${uploadFile.encryptedFilename}")
+            val outputFile = File("$DOWNLOAD_DIRECTORY/${uploadFile.filename}")
+            return try {
+                EncryptionManager.decryptStream(
+                    downloadFileDto.password,
+                    uploadFile.encryptionResult,
+                    File("$UPLOAD_DIRECTORY/${uploadFile.encryptedFilename}"),
+                    outputFile
+            } catch (e: Exception) {
+                outputFile.deleteOnExit()
+                throw e
+            }
             )
         } else {
             error("Could not find file '${downloadFileDto.filename}")

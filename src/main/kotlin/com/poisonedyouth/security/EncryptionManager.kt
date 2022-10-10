@@ -11,7 +11,6 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 import java.io.File
 import java.io.InputStream
-import java.io.OutputStream
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.spec.KeySpec
@@ -37,26 +36,37 @@ data class PasswordEncryptionResult(
 object EncryptionManager {
 
     fun decryptStream(
-        outputStream: OutputStream,
         password: String,
         encryptionResult: FileEncryptionResult,
-        file: File
-    ) {
+        encryptedFile: File,
+        outputFile: File
+    ): File {
         val key: SecretKey = generateSecretKey(password, encryptionResult.salt)
         val (cipher, spec) = setupCipher(encryptionResult.nonce)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
-        val cipherInputStream = CipherInputStream(file.inputStream(), cipher)
-        outputStream.use {
+        val messageDigest = getMessageDigest()
+
+        val cipherInputStream = CipherInputStream(encryptedFile.inputStream(), cipher)
+        outputFile.outputStream().use {
             cipherInputStream.use { encryptedInputStream ->
                 val buffer = ByteArray(cipher.blockSize)
                 var nread: Int
                 while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
                     it.write(buffer, 0, nread);
+                    messageDigest.update(buffer, 0, nread)
                 }
                 it.flush();
             }
         }
+        val digest = messageDigest.digest()
+        if (!digest.contentEquals(encryptionResult.hashSum)) {
+            throw IntegrityFailedException(
+                "Integrity check failed (expected: " +
+                    "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()})."
+            )
+        }
+        return outputFile
     }
 
     fun encryptSteam(inputstream: InputStream, file: File): Pair<String, FileEncryptionResult> {
@@ -140,8 +150,12 @@ object EncryptionManager {
 
         val messageDigest = getMessageDigest()
         messageDigest.update(encryptionResult.encryptedPassword)
-        if (!messageDigest.digest().contentEquals(encryptionResult.hashSum)) {
-            throw IntegrityFailedException("Integrity check failed.")
+        val digest = messageDigest.digest()
+        if (!digest.contentEquals(encryptionResult.hashSum)) {
+            throw IntegrityFailedException(
+                "Integrity check failed (expected: " +
+                    "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()}."
+            )
         }
 
         val (cipher, spec) = setupCipher(encryptionResult.nonce)

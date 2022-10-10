@@ -15,7 +15,7 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondOutputStream
+import io.ktor.server.response.respondFile
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
@@ -47,9 +47,11 @@ fun Application.configureRouting() {
                 }
             }
             get("/download") {
-                call.respondOutputStream {
-                    fileHandler.download(this, call.receive())
-                }
+                val result = fileHandler.download(call.receive())
+                when (result) {
+                    is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
+                        .also { result.value.delete() }
+                    is Failure -> call.respond(Companion.InternalServerError, result.errorCode)                }
             }
         }
     }
