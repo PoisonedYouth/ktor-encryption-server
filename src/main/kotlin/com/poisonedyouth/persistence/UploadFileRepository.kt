@@ -3,6 +3,7 @@ package com.poisonedyouth.persistence
 import com.poisonedyouth.application.UPLOAD_DIRECTORY
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.security.FileEncryptionResult
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.time.LocalDateTime
@@ -15,6 +16,8 @@ interface UploadFileRepository {
 
     fun findAllByUsername(username: String): List<UploadFile>
     fun deleteExpiredFiles(amount: Long, unit: TemporalUnit): List<String>
+
+    fun deleteBy(username: String, encryptedFilename: String): Boolean
 }
 
 class UploadFileRepositoryImpl : UploadFileRepository {
@@ -51,12 +54,38 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     }
 
     override fun findAllByUsername(username: String): List<UploadFile> = transaction {
-        val userEntity = UserEntity.find { UserTable.username eq username }.firstOrNull()
-        if (userEntity != null) {
-            UploadFileEntity.find { UploadFileTable.user eq userEntity.id }.map { it.toUploadFile() }
+        val userEntity = findUserOrThrow(username)
+        UploadFileEntity.find { UploadFileTable.user eq userEntity.id }.map { it.toUploadFile() }
+    }
+
+    override fun deleteBy(username: String, encryptedFilename: String): Boolean = transaction {
+        val userEntity = findUserOrThrow(username)
+        val uploadFile = findUploadFile(encryptedFilename, userEntity)
+        if (uploadFile != null) {
+            uploadFile.delete()
+            File("$UPLOAD_DIRECTORY/${encryptedFilename}").delete()
+            true
         } else {
-            emptyList()
+            false
         }
+    }
+
+    private fun findUploadFile(
+        encryptedFilename: String,
+        userEntity: UserEntity
+    ): UploadFileEntity? {
+        val uploadFile =
+            UploadFileEntity.find {
+                (UploadFileTable.encryptedFilename eq encryptedFilename)
+                    .and(UploadFileTable.user eq userEntity.id)
+            }
+                .firstOrNull()
+        return uploadFile
+    }
+
+    private fun findUserOrThrow(username: String): UserEntity {
+        return UserEntity.find { UserTable.username eq username }.firstOrNull()
+            ?: error("No user available for username '$username'.")
     }
 }
 

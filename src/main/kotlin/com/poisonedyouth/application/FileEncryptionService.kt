@@ -20,6 +20,8 @@ interface FileEncryptionService {
 const val UPLOAD_DIRECTORY = "./uploads"
 const val DOWNLOAD_DIRECTORY = "./downloads"
 
+private const val RANDOM_PASSWORD_LENGTH = 16
+
 class FileEncryptionServiceImpl(
     private val uploadFileRepository: UploadFileRepository
 ) : FileEncryptionService {
@@ -28,7 +30,7 @@ class FileEncryptionServiceImpl(
         val resultList = mutableListOf<Pair<String, UploadFile>>()
         multipart.forEachPart { part ->
             if (part is PartData.FileItem) {
-                val name = part.originalFileName ?: RandomStringUtils.randomAlphabetic(16)
+                val name = part.originalFileName ?: RandomStringUtils.randomAlphabetic(RANDOM_PASSWORD_LENGTH)
                 val encryptedName = UUID.randomUUID().toString()
                 val file =
                     File("$UPLOAD_DIRECTORY/$encryptedName")
@@ -52,6 +54,7 @@ class FileEncryptionServiceImpl(
         return resultList
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun decryptFile(downloadFileDto: DownloadFileDto): File {
         val uploadFile = uploadFileRepository.findBy(downloadFileDto.filename)
         if (uploadFile != null) {

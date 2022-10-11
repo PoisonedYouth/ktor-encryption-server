@@ -4,7 +4,6 @@ import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.UserService
-import com.poisonedyouth.persistence.UserRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

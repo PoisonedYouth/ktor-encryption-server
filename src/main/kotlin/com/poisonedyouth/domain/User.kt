@@ -1,6 +1,5 @@
 package com.poisonedyouth.domain
 
-import com.poisonedyouth.security.FileEncryptionResult
 import com.poisonedyouth.security.PasswordEncryptionResult
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

@@ -6,21 +6,22 @@ import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.application.ErrorCode.ENCRYPTION_FAILURE
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
+import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
+import com.poisonedyouth.domain.toUploadFileOverviewDto
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.IntegrityFailedException
 import io.ktor.http.content.MultiPartData
-import io.ktor.util.encodeBase64
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
 interface FileHandler {
     suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
-
     suspend fun upload(username: String, multiPartData: MultiPartData): ApiResult<List<UploadFileDto>>
     suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File>
+    suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
 }
 
 class FileHandlerImpl(
@@ -81,15 +82,24 @@ class FileHandlerImpl(
     override suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>> {
         return try {
             ApiResult.Success(uploadFileRepository.findAllByUsername(username).map {
-                UploadFileOverviewDto(
-                    filename = it.filename,
-                    encryptedFilename = it.encryptedFilename,
-                    created = it.created,
-                    hashSumBase64 = it.encryptionResult.hashSum.encodeBase64()
-                )
+                it.toUploadFileOverviewDto()
             })
         } catch (e: Exception) {
             logger.error("Failed to load upload files for user with username '$username'.", e)
+            ApiResult.Failure(ENCRYPTION_FAILURE, "")
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean> {
+        return try {
+            if (encryptedFilename == null) {
+                ApiResult.Failure(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
+            } else {
+                ApiResult.Success(uploadFileRepository.deleteBy(username, encryptedFilename))
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to delete file '$encryptedFilename' for user with username '$username'.", e)
             ApiResult.Failure(ENCRYPTION_FAILURE, "")
         }
     }

@@ -22,7 +22,29 @@ data class FileEncryptionResult(
     val nonce: ByteArray,
     val hashSum: ByteArray,
     val salt: ByteArray,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FileEncryptionResult
+
+        if (!initializationVector.contentEquals(other.initializationVector)) return false
+        if (!nonce.contentEquals(other.nonce)) return false
+        if (!hashSum.contentEquals(other.hashSum)) return false
+        if (!salt.contentEquals(other.salt)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = initializationVector.contentHashCode()
+        result = 31 * result + nonce.contentHashCode()
+        result = 31 * result + hashSum.contentHashCode()
+        result = 31 * result + salt.contentHashCode()
+        return result
+    }
+}
 
 data class PasswordEncryptionResult(
     val initializationVector: ByteArray,
@@ -30,8 +52,41 @@ data class PasswordEncryptionResult(
     val hashSum: ByteArray,
     val encryptedPassword: ByteArray,
     val salt: ByteArray
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
+        other as PasswordEncryptionResult
+
+        if (!initializationVector.contentEquals(other.initializationVector)) return false
+        if (!nonce.contentEquals(other.nonce)) return false
+        if (!hashSum.contentEquals(other.hashSum)) return false
+        if (!encryptedPassword.contentEquals(other.encryptedPassword)) return false
+        if (!salt.contentEquals(other.salt)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = initializationVector.contentHashCode()
+        result = 31 * result + nonce.contentHashCode()
+        result = 31 * result + hashSum.contentHashCode()
+        result = 31 * result + encryptedPassword.contentHashCode()
+        result = 31 * result + salt.contentHashCode()
+        return result
+    }
+}
+
+private const val DEFAULT_PASSWORD_KEY_SIZE = 256
+
+private const val DEFAULT_NONCE_LENGTH = 32
+
+private const val DEFAULT_SALT_LENGTH = 64
+
+private const val DEFAULT_ITERATION_COUNT = 10000
+
+private const val DEFAULT_GCM_PARAMETER_SPEC_LENGTH = 16 * 8
 
 object EncryptionManager {
 
@@ -53,10 +108,10 @@ object EncryptionManager {
                 val buffer = ByteArray(cipher.blockSize)
                 var nread: Int
                 while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
-                    it.write(buffer, 0, nread);
+                    it.write(buffer, 0, nread)
                     messageDigest.update(buffer, 0, nread)
                 }
-                it.flush();
+                it.flush()
             }
         }
         val digest = messageDigest.digest()
@@ -104,7 +159,7 @@ object EncryptionManager {
 
     private fun generateRandomPassword(): String {
         val keyGen = KeyGenerator.getInstance("AES")
-        keyGen.init(256)
+        keyGen.init(DEFAULT_PASSWORD_KEY_SIZE)
         return Base64.getEncoder().encodeToString(keyGen.generateKey().encoded)
     }
 
@@ -133,13 +188,13 @@ object EncryptionManager {
 
     private fun createNonce(): ByteArray {
         val random = SecureRandom.getInstanceStrong()
-        val nonce = ByteArray(32)
+        val nonce = ByteArray(DEFAULT_NONCE_LENGTH)
         random.nextBytes(nonce)
         return nonce
     }
 
     private fun generateSalt(): ByteArray {
-        val salt = ByteArray(64)
+        val salt = ByteArray(DEFAULT_SALT_LENGTH)
         val random: SecureRandom = SecureRandom.getInstanceStrong()
         random.nextBytes(salt)
         return salt
@@ -166,7 +221,7 @@ object EncryptionManager {
 
     private fun setupCipher(nonce: ByteArray): Pair<Cipher, GCMParameterSpec> {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(16 * 8, nonce)
+        val spec = GCMParameterSpec(DEFAULT_GCM_PARAMETER_SPEC_LENGTH, nonce)
         return Pair(cipher, spec)
     }
 
@@ -174,7 +229,10 @@ object EncryptionManager {
 
     private fun generateSecretKey(password: String, salt: ByteArray): SecretKey {
         val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
-        val passwordBasedEncryptionKeySpec: KeySpec = PBEKeySpec(password.toCharArray(), salt, 10000, 256)
+        val passwordBasedEncryptionKeySpec: KeySpec = PBEKeySpec(
+            password.toCharArray(), salt, DEFAULT_ITERATION_COUNT,
+            DEFAULT_PASSWORD_KEY_SIZE
+        )
         val secretKeyFromPBKDF2 = secretKeyFactory.generateSecret(passwordBasedEncryptionKeySpec)
         return SecretKeySpec(secretKeyFromPBKDF2.encoded, "AES")
     }
