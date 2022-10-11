@@ -2,6 +2,7 @@ package com.poisonedyouth.application
 
 import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.api.UploadFileDto
+import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.application.ErrorCode.ENCRYPTION_FAILURE
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
@@ -10,12 +11,13 @@ import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.IntegrityFailedException
 import io.ktor.http.content.MultiPartData
+import io.ktor.util.encodeBase64
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.OutputStream
 
 interface FileHandler {
+    suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
 
     suspend fun upload(username: String, multiPartData: MultiPartData): ApiResult<List<UploadFileDto>>
     suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File>
@@ -61,7 +63,7 @@ class FileHandlerImpl(
         return try {
             ApiResult.Success(fileEncryptionService.decryptFile(downloadFileDto))
         } catch (e: IntegrityFailedException) {
-            logger.error("Integrity check for file '${downloadFileDto.filename}' failed.",e)
+            logger.error("Integrity check for file '${downloadFileDto.filename}' failed.", e)
             ApiResult.Failure(
                 INTEGRITY_CHECK_FAILED,
                 "Integrity check for file '${downloadFileDto.filename}' failed."
@@ -71,6 +73,23 @@ class FileHandlerImpl(
             ApiResult.Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")
         } catch (e: Exception) {
             logger.error("Failed to decrypt file '$downloadFileDto'.", e)
+            ApiResult.Failure(ENCRYPTION_FAILURE, "")
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>> {
+        return try {
+            ApiResult.Success(uploadFileRepository.findAllByUsername(username).map {
+                UploadFileOverviewDto(
+                    filename = it.filename,
+                    encryptedFilename = it.encryptedFilename,
+                    created = it.created,
+                    hashSumBase64 = it.encryptionResult.hashSum.encodeBase64()
+                )
+            })
+        } catch (e: Exception) {
+            logger.error("Failed to load upload files for user with username '$username'.", e)
             ApiResult.Failure(ENCRYPTION_FAILURE, "")
         }
     }

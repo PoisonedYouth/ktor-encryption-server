@@ -45,10 +45,17 @@ fun Application.configureRouting() {
                         }
                     }
                 }
+                get("/uploads") {
+                    call.principal<UserIdPrincipal>()?.name?.let { username ->
+                        when (val result = fileHandler.getUploadFiles(username)) {
+                            is Success -> call.respond(HttpStatusCode.OK, result)
+                            is Failure -> call.respond(Companion.InternalServerError, result.errorCode)
+                        }
+                    }
+                }
             }
             get("/download") {
-                val result = fileHandler.download(call.receive())
-                when (result) {
+                when (val result = fileHandler.download(call.receive())) {
                     is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
                         .also { result.value.delete() }
                     is Failure -> call.respond(Companion.InternalServerError, result.errorMessage)                }

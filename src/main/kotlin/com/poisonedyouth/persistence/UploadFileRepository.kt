@@ -12,6 +12,8 @@ import java.time.temporal.TemporalUnit
 interface UploadFileRepository {
     fun save(uploadFile: UploadFile): UploadFile
     fun findBy(encryptedFilename: String): UploadFile?
+
+    fun findAllByUsername(username: String): List<UploadFile>
     fun deleteExpiredFiles(amount: Long, unit: TemporalUnit): List<String>
 }
 
@@ -46,6 +48,15 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             File("$UPLOAD_DIRECTORY/${it.encryptedFilename}").delete()
         }
         fileNames
+    }
+
+    override fun findAllByUsername(username: String): List<UploadFile> = transaction {
+        val userEntity = UserEntity.find { UserTable.username eq username }.firstOrNull()
+        if (userEntity != null) {
+            UploadFileEntity.find { UploadFileTable.user eq userEntity.id }.map { it.toUploadFile() }
+        } else {
+            emptyList()
+        }
     }
 }
 
