@@ -6,6 +6,7 @@ import com.poisonedyouth.application.FileHandler
 import com.poisonedyouth.application.FileHandlerImpl
 import com.poisonedyouth.application.UserService
 import com.poisonedyouth.application.UserServiceImpl
+import com.poisonedyouth.expiration.UploadFileExpirationTask
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UploadFileRepositoryImpl
 import com.poisonedyouth.persistence.UserRepository
@@ -18,10 +19,11 @@ import org.koin.logger.SLF4JLogger
 
 val bankingAppModule = module {
     single<UserRepository> { UserRepositoryImpl() }
-    single<FileEncryptionService> {FileEncryptionServiceImpl(get())}
-    single<UploadFileRepository>{UploadFileRepositoryImpl()}
-    single<UserService>{UserServiceImpl(get())}
-    single<FileHandler>{ FileHandlerImpl(get(), get(), get()) }
+    single<FileEncryptionService> { FileEncryptionServiceImpl(get()) }
+    single<UploadFileRepository> { UploadFileRepositoryImpl() }
+    single<UserService> { UserServiceImpl(get()) }
+    single<FileHandler> { FileHandlerImpl(get(), get(), get()) }
+    single { UploadFileExpirationTask(get()) }
 }
 
 fun Application.setupKoin() {

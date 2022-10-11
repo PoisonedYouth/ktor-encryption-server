@@ -17,8 +17,8 @@ interface FileEncryptionService {
     suspend fun decryptFile(downloadFileDto: DownloadFileDto): File
 }
 
-private const val UPLOAD_DIRECTORY = "./uploads"
-private const val DOWNLOAD_DIRECTORY = "./downloads"
+const val UPLOAD_DIRECTORY = "./uploads"
+const val DOWNLOAD_DIRECTORY = "./downloads"
 
 class FileEncryptionServiceImpl(
     private val uploadFileRepository: UploadFileRepository
