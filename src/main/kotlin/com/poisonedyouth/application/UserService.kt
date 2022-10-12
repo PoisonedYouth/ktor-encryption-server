@@ -30,21 +30,21 @@ class UserServiceImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun save(userDto: UserDto): ApiResult<String> {
-        if (userRepository.findByUsername(userDto.username) != null) {
-            return ApiResult.Failure(USER_ALREADY_EXIST, "User with username '${userDto.username}' already exist.")
-        }
-        val validationResult = PasswordManager.validatePassword(userDto.password)
-        if (validationResult.isNotEmpty()) {
-            logger.error("Password '${userDto.password}' does not fulfill requirements.")
-            return ApiResult.Failure(
-                PASSWORD_REQUIREMENTS_NOT_FULFILLED,
-                "Password '${userDto.password}' does not fulfill requirements: ($validationResult)"
-            )
-        }
-        return try {
+        try {
+            if (userRepository.findByUsername(userDto.username) != null) {
+                return ApiResult.Failure(USER_ALREADY_EXIST, "User with username '${userDto.username}' already exist.")
+            }
+            val validationResult = PasswordManager.validatePassword(userDto.password)
+            if (validationResult.isNotEmpty()) {
+                logger.error("Password '${userDto.password}' does not fulfill requirements.")
+                return ApiResult.Failure(
+                    PASSWORD_REQUIREMENTS_NOT_FULFILLED,
+                    "Password '${userDto.password}' does not fulfill requirements: ($validationResult)"
+                )
+            }
             val encryptionResult = EncryptionManager.encryptPassword(userDto.password)
 
-            ApiResult.Success(
+            return ApiResult.Success(
                 userRepository.save(
                     User(
                         username = userDto.username,
@@ -54,27 +54,28 @@ class UserServiceImpl(
             )
         } catch (e: Exception) {
             logger.error("Failed to persist user '$userDto'.", e)
-            ApiResult.Failure(PERSISTENCE_FAILURE, "Failed to persist user '$userDto'.")
+            return ApiResult.Failure(PERSISTENCE_FAILURE, "Failed to persist user '$userDto'.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun authenticate(userDto: UserDto): ApiResult<Boolean> {
-        val existingUser = userRepository.findByUsername(userDto.username)
-        if (existingUser == null) {
-            logger.error("User with username '${userDto.username}' does not exist.")
-            return ApiResult.Failure(USER_NOT_FOUND, "User with username '${userDto.username}' does not exist.")
-        }
         return try {
-            val decryptedPassword = EncryptionManager.decryptString(existingUser.encryptionResult, userDto.password)
-            ApiResult.Success(
-                if (decryptedPassword != userDto.password) {
-                    logger.error("Password for user with username '${userDto.username}' is wrong.")
-                    false
-                } else {
-                    true
-                }
-            )
+            val existingUser = userRepository.findByUsername(userDto.username)
+            if (existingUser == null) {
+                logger.error("User with username '${userDto.username}' does not exist.")
+                return ApiResult.Failure(USER_NOT_FOUND, "User with username '${userDto.username}' does not exist.")
+            } else {
+                val decryptedPassword = EncryptionManager.decryptString(existingUser.encryptionResult, userDto.password)
+                ApiResult.Success(
+                    if (decryptedPassword != userDto.password) {
+                        logger.error("Password for user with username '${userDto.username}' is wrong.")
+                        false
+                    } else {
+                        true
+                    }
+                )
+            }
         } catch (e: IntegrityFailedException) {
             logger.error("Integrity check for user with username '${userDto.username}' failed.", e)
             ApiResult.Failure(
@@ -92,15 +93,16 @@ class UserServiceImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun delete(username: String): ApiResult<String> {
-        val existingUser = userRepository.findByUsername(username)
-        if (existingUser == null) {
-            logger.error("User with username '${username}' does not exist.")
-            return ApiResult.Failure(USER_NOT_FOUND, "User with username '${username}' does not exist.")
-        }
         return try {
-            uploadFileRepository.deleteAllBy(username)
-            userRepository.delete(username)
-            ApiResult.Success("Successfully deleted user")
+            val existingUser = userRepository.findByUsername(username)
+            if (existingUser == null) {
+                logger.error("User with username '${username}' does not exist.")
+                ApiResult.Failure(USER_NOT_FOUND, "User with username '${username}' does not exist.")
+            } else {
+                uploadFileRepository.deleteAllBy(username)
+                userRepository.delete(username)
+                ApiResult.Success("Successfully deleted user")
+            }
         } catch (e: Exception) {
             logger.error("Failed to delete user with username '${username}'.", e)
             ApiResult.Failure(

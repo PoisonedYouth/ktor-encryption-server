@@ -85,3 +85,4 @@ fun UserEntity.toUser(): User {
         lastUpdated = this.lastUpdated.truncatedTo(ChronoUnit.SECONDS),
     )
 }
+

@@ -18,7 +18,12 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
     var created by UserTable.created
     var lastUpdated by UserTable.lastUpdated
 
-    companion object : LongEntityClass<UserEntity>(UserTable)
+    companion object : LongEntityClass<UserEntity>(UserTable) {
+        fun findUserOrThrow(username: String): UserEntity {
+            return UserEntity.find { UserTable.username eq username }.firstOrNull()
+                ?: error("No user available for username '$username'.")
+        }
+    }
 }
 
 object UserTable : LongIdTable("app_user", "id") {

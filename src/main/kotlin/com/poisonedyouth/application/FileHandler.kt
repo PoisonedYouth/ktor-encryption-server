@@ -45,12 +45,13 @@ class FileHandlerImpl(
         ipAddress: String,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
-        val existingUser = userRepository.findByUsername(username)
-        if (existingUser == null) {
-            logger.error("User with username '$username' does not exist.")
-            ApiResult.Failure(USER_NOT_FOUND, "User with username '$username' does not exist.")
-        }
         try {
+            val existingUser = userRepository.findByUsername(username)
+            if (existingUser == null) {
+                logger.error("User with username '$username' does not exist.")
+                ApiResult.Failure(USER_NOT_FOUND, "User with username '$username' does not exist.")
+            }
+
             val result = fileEncryptionService.encryptFiles(multiPartData)
 
             return ApiResult.Success(result.onEach {

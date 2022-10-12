@@ -5,6 +5,7 @@ import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.FileHandler
+import com.poisonedyouth.application.UploadFileHistoryService
 import com.poisonedyouth.application.UserService
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion
@@ -29,6 +30,7 @@ import org.koin.ktor.ext.inject
 fun Application.configureRouting() {
     val userService by inject<UserService>()
     val fileHandler by inject<FileHandler>()
+    val uploadFileHistoryService by inject<UploadFileHistoryService>()
 
     routing {
         route("/api") {
@@ -54,7 +56,15 @@ fun Application.configureRouting() {
                     call.principal<UserIdPrincipal>()?.name?.let { username ->
                         when (val result = fileHandler.getUploadFiles(username)) {
                             is Success -> call.respond(HttpStatusCode.OK, result)
-                            is Failure -> call.respond(Companion.InternalServerError, result.errorCode)
+                            is Failure -> handleFailureResponse(call, result)
+                        }
+                    }
+                }
+                get("/upload/history") {
+                    call.principal<UserIdPrincipal>()?.name?.let { username ->
+                        when (val result = uploadFileHistoryService.getUploadFileHistory(username)) {
+                            is Success -> call.respond(HttpStatusCode.OK, result)
+                            is Failure -> handleFailureResponse(call, result)
                         }
                     }
                 }
@@ -83,7 +93,6 @@ fun Application.configureRouting() {
                 )) {
                     is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
                         .also { result.value.delete() }
-
                     is Failure -> handleFailureResponse(call, result)
                 }
             }

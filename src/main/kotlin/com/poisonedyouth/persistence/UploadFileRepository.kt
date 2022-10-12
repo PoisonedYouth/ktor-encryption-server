@@ -53,12 +53,12 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     }
 
     override fun findAllByUsername(username: String): List<UploadFile> = transaction {
-        val userEntity = findUserOrThrow(username)
+        val userEntity = UserEntity.findUserOrThrow(username)
         UploadFileEntity.find { UploadFileTable.user eq userEntity.id }.map { it.toUploadFile() }
     }
 
     override fun deleteBy(username: String, encryptedFilename: String): Boolean = transaction {
-        val userEntity = findUserOrThrow(username)
+        val userEntity = UserEntity.findUserOrThrow(username)
         val uploadFile = findUploadFile(encryptedFilename, userEntity)
         if (uploadFile != null) {
             uploadFile.delete()
@@ -70,7 +70,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     }
 
     override fun deleteAllBy(username: String): List<String> = transaction {
-        val userEntity = findUserOrThrow(username)
+        val userEntity = UserEntity.findUserOrThrow(username)
         val result = UploadFileEntity.find { UploadFileTable.user eq userEntity.id }
         val fileNames = result.map { it.encryptedFilename }
         result.forEach {
@@ -91,11 +91,6 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             }
                 .firstOrNull()
         return uploadFile
-    }
-
-    private fun findUserOrThrow(username: String): UserEntity {
-        return UserEntity.find { UserTable.username eq username }.firstOrNull()
-            ?: error("No user available for username '$username'.")
     }
 }
 

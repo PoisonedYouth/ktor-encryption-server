@@ -29,7 +29,7 @@ val bankingAppModule = module {
     single<FileHandler> { FileHandlerImpl(get(), get(), get(), get()) }
     single { UploadFileExpirationTask(get()) }
     single<UploadFileHistoryRepository> { UploadFileHistoryRepositoryImpl() }
-    single<UploadFileHistoryService> { UploadFileHistoryServiceImpl(get(), get()) }
+    single<UploadFileHistoryService> { UploadFileHistoryServiceImpl(get(), get(), get()) }
 }
 
 fun Application.setupKoin() {
