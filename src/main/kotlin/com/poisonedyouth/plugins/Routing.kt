@@ -14,6 +14,7 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
@@ -39,8 +40,9 @@ fun Application.configureRouting() {
                 post("/upload") {
                     call.principal<UserIdPrincipal>()?.name?.let { username ->
                         val result = fileHandler.upload(
-                            username,
-                            call.receiveMultipart()
+                            username = username,
+                            ipAddress = call.request.origin.host,
+                            multiPartData = call.receiveMultipart()
                         )
                         when (result) {
                             is Success -> call.respond(HttpStatusCode.Created, result)
@@ -75,7 +77,10 @@ fun Application.configureRouting() {
                 }
             }
             get("/download") {
-                when (val result = fileHandler.download(call.receive())) {
+                when (val result = fileHandler.download(
+                    downloadFileDto = call.receive(),
+                    ipAddress = call.request.origin.host
+                )) {
                     is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
                         .also { result.value.delete() }
 

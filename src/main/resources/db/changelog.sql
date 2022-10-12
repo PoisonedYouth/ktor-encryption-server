@@ -25,4 +25,15 @@ CREATE TABLE `upload_file`
     `nonce`              BYTEA                           NOT NULL,
     `user_id`            LONG                            NOT NULL,
     FOREIGN KEY (`user_id`) REFERENCES `app_user` (`id`) ON UPDATE cascade ON DELETE cascade
+);
+
+-- changeset liquibase:2
+CREATE TABLE `upload_file_history`
+(
+    `id`             LONG PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    `ip_address`     VARCHAR2                        NOT NULL,
+    `created`        DATETIME                        NOT NULL,
+    `action`         VARCHAR2                        NOT NULL,
+    `upload_file_id` LONG                            NOT NULL,
+    FOREIGN KEY (`upload_file_id`) REFERENCES `upload_file` (`id`) ON UPDATE cascade ON DELETE cascade
 )

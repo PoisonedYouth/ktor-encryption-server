@@ -8,6 +8,8 @@ import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
 import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
+import com.poisonedyouth.domain.UploadAction.DOWNLOAD
+import com.poisonedyouth.domain.UploadAction.UPLOAD
 import com.poisonedyouth.domain.toUploadFileOverviewDto
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
@@ -19,20 +21,30 @@ import java.io.File
 
 interface FileHandler {
     suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
-    suspend fun upload(username: String, multiPartData: MultiPartData): ApiResult<List<UploadFileDto>>
-    suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File>
+    suspend fun upload(
+        username: String,
+        ipAddress: String,
+        multiPartData: MultiPartData
+    ): ApiResult<List<UploadFileDto>>
+
+    suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File>
     suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
 }
 
 class FileHandlerImpl(
     private val uploadFileRepository: UploadFileRepository,
     private val fileEncryptionService: FileEncryptionService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val uploadFileHistoryService: UploadFileHistoryService,
 ) : FileHandler {
     private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun upload(username: String, multiPartData: MultiPartData): ApiResult<List<UploadFileDto>> {
+    override suspend fun upload(
+        username: String,
+        ipAddress: String,
+        multiPartData: MultiPartData
+    ): ApiResult<List<UploadFileDto>> {
         val existingUser = userRepository.findByUsername(username)
         if (existingUser == null) {
             logger.error("User with username '$username' does not exist.")
@@ -46,6 +58,11 @@ class FileHandlerImpl(
                     owner = existingUser
                 )
                 uploadFileRepository.save(updatedUploadFile)
+                uploadFileHistoryService.addUploadFileHistoryEntry(
+                    ipAddress = "",
+                    action = UPLOAD,
+                    encryptedFilename = it.second.encryptedFilename
+                )
             }.map {
                 UploadFileDto(
                     it.second.filename,
@@ -60,9 +77,15 @@ class FileHandlerImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun download(downloadFileDto: DownloadFileDto): ApiResult<File> {
+    override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File> {
         return try {
-            ApiResult.Success(fileEncryptionService.decryptFile(downloadFileDto))
+            ApiResult.Success(fileEncryptionService.decryptFile(downloadFileDto).also {
+                uploadFileHistoryService.addUploadFileHistoryEntry(
+                    ipAddress = ipAddress,
+                    action = DOWNLOAD,
+                    encryptedFilename = downloadFileDto.filename
+                )
+            })
         } catch (e: IntegrityFailedException) {
             logger.error("Integrity check for file '${downloadFileDto.filename}' failed.", e)
             ApiResult.Failure(
