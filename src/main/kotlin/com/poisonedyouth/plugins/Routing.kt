@@ -65,6 +65,14 @@ fun Application.configureRouting() {
                         }
                     }
                 }
+                delete("/user") {
+                    call.principal<UserIdPrincipal>()?.name?.let { username ->
+                        when (val result = userService.delete(username)) {
+                            is Success -> call.respond(HttpStatusCode.OK, result)
+                            is Failure -> handleFailureResponse(call, result)
+                        }
+                    }
+                }
             }
             get("/download") {
                 when (val result = fileHandler.download(call.receive())) {

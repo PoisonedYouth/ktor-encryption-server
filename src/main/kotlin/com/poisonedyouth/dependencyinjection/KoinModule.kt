@@ -21,7 +21,7 @@ val bankingAppModule = module {
     single<UserRepository> { UserRepositoryImpl() }
     single<FileEncryptionService> { FileEncryptionServiceImpl(get()) }
     single<UploadFileRepository> { UploadFileRepositoryImpl() }
-    single<UserService> { UserServiceImpl(get()) }
+    single<UserService> { UserServiceImpl(get(), get()) }
     single<FileHandler> { FileHandlerImpl(get(), get(), get()) }
     single { UploadFileExpirationTask(get()) }
 }

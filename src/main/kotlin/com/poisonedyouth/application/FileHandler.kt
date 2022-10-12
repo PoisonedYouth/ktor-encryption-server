@@ -96,6 +96,7 @@ class FileHandlerImpl(
             if (encryptedFilename == null) {
                 ApiResult.Failure(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
             } else {
+                logger.info("Deleted upload file  with encrypted filename '$encryptedFilename'.")
                 ApiResult.Success(uploadFileRepository.deleteBy(username, encryptedFilename))
             }
         } catch (e: Exception) {

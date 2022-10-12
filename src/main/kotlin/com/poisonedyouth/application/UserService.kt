@@ -7,6 +7,7 @@ import com.poisonedyouth.application.ErrorCode.PERSISTENCE_FAILURE
 import com.poisonedyouth.application.ErrorCode.USER_ALREADY_EXIST
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.domain.User
+import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
 import com.poisonedyouth.security.IntegrityFailedException
@@ -16,10 +17,12 @@ import org.slf4j.LoggerFactory
 interface UserService {
     fun authenticate(userDto: UserDto): ApiResult<Boolean>
     fun save(userDto: UserDto): ApiResult<String>
+    fun delete(username: String): ApiResult<String>
 }
 
 class UserServiceImpl(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val uploadFileRepository: UploadFileRepository,
 ) : UserService {
     private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
 
@@ -73,6 +76,26 @@ class UserServiceImpl(
             ApiResult.Failure(
                 AUTHENTICATION_FAILURE,
                 "Authentication of user with username '${userDto.username}' failed."
+            )
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override fun delete(username: String): ApiResult<String> {
+        val existingUser = userRepository.findByUsername(username)
+        if (existingUser == null) {
+            logger.error("User with username '${username}' does not exist.")
+            return ApiResult.Failure(USER_NOT_FOUND, "User with username '${username}' does not exist.")
+        }
+        return try {
+            uploadFileRepository.deleteAllBy(username)
+            userRepository.delete(username)
+            ApiResult.Success("Successfully deleted user")
+        } catch (e: Exception) {
+            logger.error("Failed to delete user with username '${username}'.", e)
+            ApiResult.Failure(
+                AUTHENTICATION_FAILURE,
+                "Failed to delete user with username '${username}'."
             )
         }
     }
