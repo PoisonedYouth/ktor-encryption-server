@@ -125,7 +125,7 @@ object EncryptionManager {
     }
 
     fun encryptSteam(inputstream: InputStream, file: File): Pair<String, FileEncryptionResult> {
-        val password = generateRandomPassword()
+        val password = PasswordManager.createRandomPassword()
         val salt = generateSalt()
 
         val key: SecretKey = generateSecretKey(password, salt)
@@ -156,13 +156,6 @@ object EncryptionManager {
             )
         )
     }
-
-    private fun generateRandomPassword(): String {
-        val keyGen = KeyGenerator.getInstance("AES")
-        keyGen.init(DEFAULT_PASSWORD_KEY_SIZE)
-        return Base64.getEncoder().encodeToString(keyGen.generateKey().encoded)
-    }
-
 
     fun encryptPassword(password: String): PasswordEncryptionResult {
         val salt = generateSalt()

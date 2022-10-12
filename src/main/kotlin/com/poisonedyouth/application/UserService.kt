@@ -3,6 +3,7 @@ package com.poisonedyouth.application
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.application.ErrorCode.AUTHENTICATION_FAILURE
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
+import com.poisonedyouth.application.ErrorCode.PASSWORD_REQUIREMENTS_NOT_FULFILLED
 import com.poisonedyouth.application.ErrorCode.PERSISTENCE_FAILURE
 import com.poisonedyouth.application.ErrorCode.USER_ALREADY_EXIST
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
@@ -11,6 +12,7 @@ import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
 import com.poisonedyouth.security.IntegrityFailedException
+import com.poisonedyouth.security.PasswordManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -30,6 +32,14 @@ class UserServiceImpl(
     override fun save(userDto: UserDto): ApiResult<String> {
         if (userRepository.findByUsername(userDto.username) != null) {
             return ApiResult.Failure(USER_ALREADY_EXIST, "User with username '${userDto.username}' already exist.")
+        }
+        val validationResult = PasswordManager.validatePassword(userDto.password)
+        if (validationResult.isNotEmpty()) {
+            logger.error("Password '${userDto.password}' does not fulfill requirements.")
+            return ApiResult.Failure(
+                PASSWORD_REQUIREMENTS_NOT_FULFILLED,
+                "Password '${userDto.password}' does not fulfill requirements: ($validationResult)"
+            )
         }
         return try {
             val encryptionResult = EncryptionManager.encryptPassword(userDto.password)

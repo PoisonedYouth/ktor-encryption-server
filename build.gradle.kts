@@ -36,6 +36,8 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
 
+    // password security
+    implementation("org.passay:passay:1.6.2")
 
     // exposed
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
