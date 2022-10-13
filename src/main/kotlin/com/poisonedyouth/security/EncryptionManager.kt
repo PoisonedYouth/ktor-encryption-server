@@ -3,7 +3,6 @@ package com.poisonedyouth.security
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
-import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
@@ -14,7 +13,6 @@ import java.io.InputStream
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.spec.KeySpec
-import java.util.*
 
 
 data class FileEncryptionResult(
@@ -167,8 +165,9 @@ object EncryptionManager {
         val (cipher, spec) = setupCipher(nonce)
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
+        val encryptedPassword = cipher.doFinal(password.encodeToByteArray())
+
         val messageDigest = getMessageDigest()
-        val encryptedPassword = cipher.doFinal()
         messageDigest.update(encryptedPassword)
         return PasswordEncryptionResult(
             initializationVector = cipher.iv,
@@ -208,8 +207,8 @@ object EncryptionManager {
 
         val (cipher, spec) = setupCipher(encryptionResult.nonce)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
-
-        return cipher.doFinal(encryptionResult.encryptedPassword).decodeToString()
+        val decryptedPassword = cipher.doFinal(encryptionResult.encryptedPassword)
+        return decryptedPassword.decodeToString()
     }
 
     private fun setupCipher(nonce: ByteArray): Pair<Cipher, GCMParameterSpec> {

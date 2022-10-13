@@ -18,7 +18,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 interface UserService {
-    fun authenticate(userDto: UserDto): ApiResult<Boolean>
+    fun authenticate(userDto: UserDto): ApiResult<Unit>
     fun save(userDto: UserDto): ApiResult<String>
     fun delete(username: String): ApiResult<String>
     fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String>
@@ -61,7 +61,7 @@ class UserServiceImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override fun authenticate(userDto: UserDto): ApiResult<Boolean> {
+    override fun authenticate(userDto: UserDto): ApiResult<Unit> {
         return try {
             val existingUser = userRepository.findByUsername(userDto.username)
             if (existingUser == null) {
@@ -69,14 +69,15 @@ class UserServiceImpl(
                 return ApiResult.Failure(USER_NOT_FOUND, "User with username '${userDto.username}' does not exist.")
             } else {
                 val decryptedPassword = EncryptionManager.decryptString(existingUser.encryptionResult, userDto.password)
-                ApiResult.Success(
-                    if (decryptedPassword != userDto.password) {
-                        logger.error("Password for user with username '${userDto.username}' is wrong.")
-                        false
-                    } else {
-                        true
-                    }
-                )
+                if (decryptedPassword != userDto.password) {
+                    logger.error("Password for user with username '${userDto.username}' is wrong.")
+                    ApiResult.Failure(
+                        AUTHENTICATION_FAILURE,
+                        "Password for user with username '${userDto.username}' is wrong."
+                    )
+                } else {
+                    ApiResult.Success(Unit)
+                }
             }
         } catch (e: IntegrityFailedException) {
             logger.error("Integrity check for user with username '${userDto.username}' failed.", e)
