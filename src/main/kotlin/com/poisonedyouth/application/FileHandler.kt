@@ -14,7 +14,11 @@ import com.poisonedyouth.domain.toUploadFileOverviewDto
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.IntegrityFailedException
+import io.ktor.http.RequestConnectionPoint
+import io.ktor.http.URLBuilder
+import io.ktor.http.URLProtocol
 import io.ktor.http.content.MultiPartData
+import io.ktor.http.parametersOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -23,11 +27,12 @@ interface FileHandler {
     suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
     suspend fun upload(
         username: String,
-        ipAddress: String,
+        origin: RequestConnectionPoint,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>>
 
     suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File>
+    suspend fun download(encryptedFilename: String, password: String, ipAddress: String): ApiResult<File>
     suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
 }
 
@@ -42,7 +47,7 @@ class FileHandlerImpl(
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun upload(
         username: String,
-        ipAddress: String,
+        origin: RequestConnectionPoint,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
         try {
@@ -60,21 +65,33 @@ class FileHandlerImpl(
                 )
                 uploadFileRepository.save(updatedUploadFile)
                 uploadFileHistoryService.addUploadFileHistoryEntry(
-                    ipAddress = "",
+                    ipAddress = origin.remoteHost,
                     action = UPLOAD,
                     encryptedFilename = it.second.encryptedFilename
                 )
             }.map {
                 UploadFileDto(
-                    it.second.filename,
-                    it.second.encryptedFilename,
-                    it.first
+                    filename = it.second.filename,
+                    encryptedFilename = it.second.encryptedFilename,
+                    password = it.first,
+                    downloadLink = buildDownloadLink(origin, it.second.encryptedFilename, it.first)
                 )
             })
         } catch (e: Exception) {
             logger.error("Upload of files failed.", e)
             return ApiResult.Failure(ENCRYPTION_FAILURE, "Upload of failes failed.")
         }
+    }
+
+    private fun buildDownloadLink(origin: RequestConnectionPoint, encryptedFilename: String, password: String): String {
+        val builder = URLBuilder(
+            protocol = URLProtocol.HTTP,
+            host = origin.host,
+            port = origin.port,
+            pathSegments = listOf("api", "download"),
+            parameters = parametersOf("encryptedFilename" to listOf(encryptedFilename), "password" to listOf(password))
+        )
+        return builder.buildString()
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
@@ -100,6 +117,15 @@ class FileHandlerImpl(
             logger.error("Failed to decrypt file '$downloadFileDto'.", e)
             ApiResult.Failure(ENCRYPTION_FAILURE, "")
         }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override suspend fun download(encryptedFilename: String, password: String, ipAddress: String): ApiResult<File> {
+        val downloadFileDto = DownloadFileDto(
+            password = password,
+            filename = encryptedFilename
+        )
+        return download(downloadFileDto, ipAddress)
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer

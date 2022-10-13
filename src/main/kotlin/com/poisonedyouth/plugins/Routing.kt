@@ -44,7 +44,7 @@ fun Application.configureRouting() {
                     call.principal<UserIdPrincipal>()?.name?.let { username ->
                         val result = fileHandler.upload(
                             username = username,
-                            ipAddress = call.request.origin.host,
+                            origin = call.request.origin,
                             multiPartData = call.receiveMultipart()
                         )
                         when (result) {
@@ -96,12 +96,24 @@ fun Application.configureRouting() {
                 }
             }
             get("/download") {
-                when (val result = fileHandler.download(
-                    downloadFileDto = call.receive(),
-                    ipAddress = call.request.origin.host
-                )) {
+                val queryParameters = call.request.queryParameters
+                val result =
+                    if (queryParameters.contains("password") && queryParameters.contains("encryptedFilename")) {
+                        fileHandler.download(
+                            encryptedFilename = queryParameters["encryptedFilename"]!!,
+                            password = queryParameters["password"]!!,
+                            ipAddress = call.request.origin.remoteHost
+                        )
+                    } else {
+                        fileHandler.download(
+                            downloadFileDto = call.receive(),
+                            ipAddress = call.request.origin.host
+                        )
+                    }
+                when (result) {
                     is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
                         .also { result.value.delete() }
+
                     is Failure -> handleFailureResponse(call, result)
                 }
             }

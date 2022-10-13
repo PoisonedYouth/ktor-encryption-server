@@ -5,7 +5,8 @@ import java.time.LocalDateTime
 data class UploadFileDto(
     val filename: String,
     val encryptedFilename: String,
-    val password: String
+    val password: String,
+    val downloadLink: String
 )
 
 data class UploadFileOverviewDto(
