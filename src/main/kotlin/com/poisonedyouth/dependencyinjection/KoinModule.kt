@@ -8,6 +8,7 @@ import com.poisonedyouth.application.UploadFileHistoryService
 import com.poisonedyouth.application.UploadFileHistoryServiceImpl
 import com.poisonedyouth.application.UserService
 import com.poisonedyouth.application.UserServiceImpl
+import com.poisonedyouth.expiration.CleanupTask
 import com.poisonedyouth.expiration.UploadFileExpirationTask
 import com.poisonedyouth.persistence.UploadFileHistoryRepository
 import com.poisonedyouth.persistence.UploadFileHistoryRepositoryImpl
@@ -28,6 +29,7 @@ val bankingAppModule = module {
     single<UserService> { UserServiceImpl(get(), get()) }
     single<FileHandler> { FileHandlerImpl(get(), get(), get(), get()) }
     single { UploadFileExpirationTask(get()) }
+    single { CleanupTask(get())}
     single<UploadFileHistoryRepository> { UploadFileHistoryRepositoryImpl() }
     single<UploadFileHistoryService> { UploadFileHistoryServiceImpl(get(), get(), get()) }
 }

@@ -15,7 +15,7 @@ const val EXPIRATION_DAYS: Long = 6
 class UploadFileExpirationTask(
     private val uploadFileRepository: UploadFileRepository
 ) : TimerTask() {
-    private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(UploadFileExpirationTask::class.java)
 
     override fun run() {
         logger.info("Start detecting expired upload files...")

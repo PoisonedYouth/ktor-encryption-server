@@ -2,6 +2,7 @@ package com.poisonedyouth
 
 import com.poisonedyouth.configuration.setupApplicationConfiguration
 import com.poisonedyouth.dependencyinjection.setupKoin
+import com.poisonedyouth.expiration.setupCleanupTask
 import com.poisonedyouth.expiration.setupUploadFileExpirationTask
 import com.poisonedyouth.persistence.migrateDatabaseSchema
 import com.poisonedyouth.persistence.setupDatabase
@@ -26,4 +27,5 @@ fun Application.module() {
     configureRouting()
 
     setupUploadFileExpirationTask()
+    setupCleanupTask()
 }
