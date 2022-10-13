@@ -1,5 +1,6 @@
 package com.poisonedyouth.application
 
+import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.application.ErrorCode.AUTHENTICATION_FAILURE
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
@@ -20,6 +21,7 @@ interface UserService {
     fun authenticate(userDto: UserDto): ApiResult<Boolean>
     fun save(userDto: UserDto): ApiResult<String>
     fun delete(username: String): ApiResult<String>
+    fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String>
 }
 
 class UserServiceImpl(
@@ -102,6 +104,38 @@ class UserServiceImpl(
                 uploadFileRepository.deleteAllBy(username)
                 userRepository.delete(username)
                 ApiResult.Success("Successfully deleted user")
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to delete user with username '${username}'.", e)
+            ApiResult.Failure(
+                AUTHENTICATION_FAILURE,
+                "Failed to delete user with username '${username}'."
+            )
+        }
+    }
+
+    override fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String> {
+        return try {
+            val existingUser = userRepository.findByUsername(username)
+            if (existingUser == null) {
+                logger.error("User with username '${username}' does not exist.")
+                ApiResult.Failure(USER_NOT_FOUND, "User with username '${username}' does not exist.")
+            } else {
+                val validationResult = PasswordManager.validatePassword(passwordDto.newPassword)
+                if (validationResult.isNotEmpty()) {
+                    logger.error("Password '${passwordDto.newPassword}' does not fulfill requirements.")
+                    return ApiResult.Failure(
+                        PASSWORD_REQUIREMENTS_NOT_FULFILLED,
+                        "Password '${passwordDto.newPassword}' does not fulfill requirements: ($validationResult)"
+                    )
+                }
+                val encryptionResult = EncryptionManager.encryptPassword(passwordDto.newPassword)
+                userRepository.save(
+                    existingUser.copy(
+                        encryptionResult = encryptionResult
+                    )
+                )
+                ApiResult.Success("Successfully updated password .")
             }
         } catch (e: Exception) {
             logger.error("Failed to delete user with username '${username}'.", e)

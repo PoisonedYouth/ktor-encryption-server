@@ -23,6 +23,7 @@ import io.ktor.server.response.respondFile
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
@@ -80,6 +81,14 @@ fun Application.configureRouting() {
                 delete("/user") {
                     call.principal<UserIdPrincipal>()?.name?.let { username ->
                         when (val result = userService.delete(username)) {
+                            is Success -> call.respond(HttpStatusCode.OK, result)
+                            is Failure -> handleFailureResponse(call, result)
+                        }
+                    }
+                }
+                put("/user/password") {
+                    call.principal<UserIdPrincipal>()?.name?.let { username ->
+                        when (val result = userService.updatePassword(username, call.receive())) {
                             is Success -> call.respond(HttpStatusCode.OK, result)
                             is Failure -> handleFailureResponse(call, result)
                         }

@@ -6,6 +6,7 @@ import org.passay.EnglishCharacterData.Digit
 import org.passay.EnglishCharacterData.LowerCase
 import org.passay.EnglishCharacterData.Special
 import org.passay.EnglishCharacterData.UpperCase
+import org.passay.LengthRule
 import org.passay.PasswordData
 import org.passay.PasswordGenerator
 import org.passay.PasswordValidator
@@ -22,8 +23,9 @@ object PasswordManager {
         CharacterRule(UpperCase),
         CharacterRule(LowerCase),
     )
+    val lengthRule = LengthRule(16)
     private val passwordGenerator = PasswordGenerator()
-    private val passwordValidator = PasswordValidator(characterRules)
+    private val passwordValidator = PasswordValidator(characterRules + lengthRule)
 
     fun createRandomPassword(): String {
         return passwordGenerator.generatePassword(MINIMUM_PASSWORD_LENGTH, characterRules)
