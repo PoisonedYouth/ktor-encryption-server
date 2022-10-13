@@ -13,6 +13,8 @@ import com.poisonedyouth.domain.UploadAction.UPLOAD
 import com.poisonedyouth.domain.toUploadFileOverviewDto
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
+import com.poisonedyouth.plugins.ENCRYPTED_FILENAME_QUERY_PARAM
+import com.poisonedyouth.plugins.PASSWORD_QUERY_PARAM
 import com.poisonedyouth.security.IntegrityFailedException
 import io.ktor.http.RequestConnectionPoint
 import io.ktor.http.URLBuilder
@@ -74,7 +76,8 @@ class FileHandlerImpl(
                     filename = it.second.filename,
                     encryptedFilename = it.second.encryptedFilename,
                     password = it.first,
-                    downloadLink = buildDownloadLink(origin, it.second.encryptedFilename, it.first)
+                    downloadLink = buildDownloadLink(origin, it.second.encryptedFilename, it.first),
+                    deleteLink = buildDeleteLink(origin, it.second.encryptedFilename)
                 )
             })
         } catch (e: Exception) {
@@ -83,13 +86,27 @@ class FileHandlerImpl(
         }
     }
 
+    private fun buildDeleteLink(origin: RequestConnectionPoint, encryptedFilename: String): String {
+        val builder = URLBuilder(
+            protocol = URLProtocol.HTTP,
+            host = origin.host,
+            port = origin.port,
+            pathSegments = listOf("api", "upload"),
+            parameters = parametersOf(ENCRYPTED_FILENAME_QUERY_PARAM to listOf(encryptedFilename))
+        )
+        return builder.buildString()
+    }
+
     private fun buildDownloadLink(origin: RequestConnectionPoint, encryptedFilename: String, password: String): String {
         val builder = URLBuilder(
             protocol = URLProtocol.HTTP,
             host = origin.host,
             port = origin.port,
             pathSegments = listOf("api", "download"),
-            parameters = parametersOf("encryptedFilename" to listOf(encryptedFilename), "password" to listOf(password))
+            parameters = parametersOf(
+                ENCRYPTED_FILENAME_QUERY_PARAM to listOf(encryptedFilename),
+                PASSWORD_QUERY_PARAM to listOf(password)
+            )
         )
         return builder.buildString()
     }

@@ -21,6 +21,10 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import org.koin.ktor.ext.inject
 
+const val ENCRYPTED_FILENAME_QUERY_PARAM = "encryptedfilename"
+
+const val PASSWORD_QUERY_PARAM = "password"
+
 fun Routing.configureUploadRouting() {
     val fileHandler by inject<FileHandler>()
     val uploadFileHistoryService by inject<UploadFileHistoryService>()
@@ -60,7 +64,7 @@ fun Routing.configureUploadRouting() {
             delete("") {
                 call.principal<UserIdPrincipal>()?.name?.let { username ->
                     when (val result =
-                        fileHandler.delete(username, call.request.queryParameters["encryptedfilename"])) {
+                        fileHandler.delete(username, call.request.queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM])) {
                         is Success -> call.respond(HttpStatusCode.OK, result)
                         is Failure -> handleFailureResponse(call, result)
                     }
@@ -70,11 +74,13 @@ fun Routing.configureUploadRouting() {
     }
     get("/download") {
         val queryParameters = call.request.queryParameters
+        val password = queryParameters[PASSWORD_QUERY_PARAM]
+        val encryptedFilename = queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM]
         val result =
-            if (queryParameters.contains("password") && queryParameters.contains("encryptedFilename")) {
+            if (encryptedFilename != null && password != null) {
                 fileHandler.download(
-                    encryptedFilename = queryParameters["encryptedFilename"]!!,
-                    password = queryParameters["password"]!!,
+                    encryptedFilename = encryptedFilename,
+                    password = password,
                     ipAddress = call.request.origin.remoteHost
                 )
             } else {
