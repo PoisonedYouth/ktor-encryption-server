@@ -43,6 +43,14 @@ fun Routing.configureUserRouting() {
                     }
                 }
             }
+            put("/settings") {
+                call.principal<UserIdPrincipal>()?.name?.let { username ->
+                    when (val result = userService.updateSettings(username, call.receive())) {
+                        is Success -> call.respond(HttpStatusCode.OK, result)
+                        is Failure -> handleFailureResponse(call, result)
+                    }
+                }
+            }
         }
     }
 

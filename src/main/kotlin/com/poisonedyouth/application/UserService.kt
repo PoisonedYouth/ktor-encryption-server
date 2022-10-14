@@ -2,13 +2,16 @@ package com.poisonedyouth.application
 
 import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UserDto
+import com.poisonedyouth.api.UserSettingsDto
 import com.poisonedyouth.application.ErrorCode.AUTHENTICATION_FAILURE
+import com.poisonedyouth.application.ErrorCode.INPUT_VALIDATION_FAILED
 import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
 import com.poisonedyouth.application.ErrorCode.PASSWORD_REQUIREMENTS_NOT_FULFILLED
 import com.poisonedyouth.application.ErrorCode.PERSISTENCE_FAILURE
 import com.poisonedyouth.application.ErrorCode.USER_ALREADY_EXIST
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.domain.User
+import com.poisonedyouth.domain.UserSettings
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
@@ -22,6 +25,7 @@ interface UserService {
     fun save(userDto: UserDto): ApiResult<String>
     fun delete(username: String): ApiResult<String>
     fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String>
+    fun updateSettings(username: String, userSettingsDto: UserSettingsDto): ApiResult<String>
 }
 
 class UserServiceImpl(
@@ -51,6 +55,9 @@ class UserServiceImpl(
                     User(
                         username = userDto.username,
                         encryptionResult = encryptionResult,
+                        userSettings = UserSettings(
+                            uploadFileExpirationDays = userDto.userSettings.uploadFileExpirationDays
+                        )
                     )
                 ).username
             )
@@ -139,10 +146,38 @@ class UserServiceImpl(
                 ApiResult.Success("Successfully updated password .")
             }
         } catch (e: Exception) {
-            logger.error("Failed to delete user with username '${username}'.", e)
+            logger.error("Failed to update password for user with username '${username}'.", e)
             ApiResult.Failure(
                 AUTHENTICATION_FAILURE,
-                "Failed to delete user with username '${username}'."
+                "Failed to update password for user with username '${username}'."
+            )
+        }
+    }
+
+    override fun updateSettings(username: String, userSettingsDto: UserSettingsDto): ApiResult<String> {
+        return try {
+            val existingUser = userRepository.findByUsername(username)
+            if (existingUser == null) {
+                logger.error("User with username '${username}' does not exist.")
+                ApiResult.Failure(USER_NOT_FOUND, "User with username '${username}' does not exist.")
+            } else {
+                userRepository.save(
+                    existingUser.copy(
+                        userSettings = UserSettings(
+                            uploadFileExpirationDays = userSettingsDto.uploadFileExpirationDays
+                        )
+                    )
+                )
+                ApiResult.Success("Successfully updated user settings.")
+            }
+        } catch (e: IllegalArgumentException) {
+            logger.error("User settings '$userSettingsDto' not fulfill requirements", e)
+            ApiResult.Failure(INPUT_VALIDATION_FAILED, "User settings '$userSettingsDto' not fulfill requirements")
+        } catch (e: Exception) {
+            logger.error("Failed to update settings for user with username '${username}'.", e)
+            ApiResult.Failure(
+                AUTHENTICATION_FAILURE,
+                "Failed to update settings for user with username '${username}'."
             )
         }
     }
