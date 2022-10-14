@@ -1,6 +1,7 @@
 package com.poisonedyouth.persistence
 
 import com.poisonedyouth.domain.User
+import com.poisonedyouth.domain.UserSettings
 import com.poisonedyouth.security.PasswordEncryptionResult
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
@@ -31,6 +32,11 @@ class UserRepositoryImpl : UserRepository {
                 created = currentDateTime
                 lastUpdated = currentDateTime
                 salt = user.encryptionResult.salt
+                userSettings = UserSettingsEntity.new {
+                    uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
+                    created = currentDateTime
+                    lastUpdated = created
+                }
             }
 
             user.copy(
@@ -46,10 +52,14 @@ class UserRepositoryImpl : UserRepository {
             existingUser.created = user.created
             existingUser.lastUpdated = currentDateTime
             existingUser.salt = user.encryptionResult.salt
-            user.copy(
-                lastUpdated = currentDateTime
-            )
+            existingUser.userSettings = existingUser.userSettings.apply {
+                this.lastUpdated = currentDateTime
+                this.uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
+            }
         }
+        user.copy(
+            lastUpdated = currentDateTime
+        )
     }
 
     override fun delete(username: String): Unit = transaction {
@@ -81,8 +91,17 @@ fun UserEntity.toUser(): User {
             nonce = this.nonce,
             salt = this.salt
         ),
+        userSettings = this.userSettings.toUserSettings(),
         created = this.created.truncatedTo(ChronoUnit.SECONDS),
         lastUpdated = this.lastUpdated.truncatedTo(ChronoUnit.SECONDS),
+    )
+}
+
+fun UserSettingsEntity.toUserSettings(): UserSettings {
+    return UserSettings(
+        uploadFileExpirationDays = this.uploadFileExpirationDays,
+        created = this.created.truncatedTo(ChronoUnit.SECONDS),
+        lastUpdated = this.created.truncatedTo(ChronoUnit.SECONDS)
     )
 }
 

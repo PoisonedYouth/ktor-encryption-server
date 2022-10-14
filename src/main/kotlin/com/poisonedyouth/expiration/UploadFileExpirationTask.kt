@@ -1,6 +1,5 @@
 package com.poisonedyouth.expiration
 
-import com.poisonedyouth.application.UserService
 import com.poisonedyouth.persistence.UploadFileRepository
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
@@ -10,7 +9,7 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-const val EXPIRATION_DAYS: Long = 6
+const val DEFAULT_EXPIRATION_DAYS: Long = 6
 
 class UploadFileExpirationTask(
     private val uploadFileRepository: UploadFileRepository
@@ -19,7 +18,7 @@ class UploadFileExpirationTask(
 
     override fun run() {
         logger.info("Start detecting expired upload files...")
-        val result = uploadFileRepository.deleteExpiredFiles(EXPIRATION_DAYS, ChronoUnit.DAYS)
+        val result = uploadFileRepository.deleteExpiredFiles(DEFAULT_EXPIRATION_DAYS, ChronoUnit.DAYS)
         result.forEach { logger.info("Deleted upload file '${it}'") }
         if (result.isEmpty()) {
             logger.info("No upload files to delete.")

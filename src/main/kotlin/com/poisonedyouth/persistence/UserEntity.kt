@@ -17,6 +17,7 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
     var hashSum by UserTable.hashSum
     var created by UserTable.created
     var lastUpdated by UserTable.lastUpdated
+    var userSettings by UserSettingsEntity referencedOn UserTable.userSettings
 
     companion object : LongEntityClass<UserEntity>(UserTable) {
         fun findUserOrThrow(username: String): UserEntity {
@@ -35,4 +36,5 @@ object UserTable : LongIdTable("app_user", "id") {
     val nonce = binary("nonce")
     val created = datetime("created")
     val lastUpdated = datetime("last_updated")
+    val userSettings = reference("user_settings_id", UserSettingsTable)
 }
