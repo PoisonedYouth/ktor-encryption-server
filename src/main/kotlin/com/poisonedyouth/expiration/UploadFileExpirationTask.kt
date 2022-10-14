@@ -18,7 +18,7 @@ class UploadFileExpirationTask(
 
     override fun run() {
         logger.info("Start detecting expired upload files...")
-        val result = uploadFileRepository.deleteExpiredFiles(DEFAULT_EXPIRATION_DAYS, ChronoUnit.DAYS)
+        val result = uploadFileRepository.deleteExpiredFiles()
         result.forEach { logger.info("Deleted upload file '${it}'") }
         if (result.isEmpty()) {
             logger.info("No upload files to delete.")

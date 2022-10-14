@@ -8,13 +8,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit.SECONDS
-import java.time.temporal.TemporalUnit
 
 interface UploadFileRepository {
     fun save(uploadFile: UploadFile): UploadFile
     fun findBy(encryptedFilename: String): UploadFile?
     fun findAllByUsername(username: String): List<UploadFile>
-    fun deleteExpiredFiles(amount: Long, unit: TemporalUnit): List<String>
+    fun deleteExpiredFiles(): List<String>
     fun deleteBy(username: String, encryptedFilename: String): Boolean
     fun deleteAllBy(username: String): List<String>
 }
@@ -42,8 +41,10 @@ class UploadFileRepositoryImpl : UploadFileRepository {
         UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.firstOrNull()?.toUploadFile()
     }
 
-    override fun deleteExpiredFiles(amount: Long, unit: TemporalUnit): List<String> = transaction {
-        val result = UploadFileEntity.find { UploadFileTable.created less LocalDateTime.now().minus(amount, unit) }
+    override fun deleteExpiredFiles(): List<String> = transaction {
+        val result = UploadFileEntity.all().filter {
+            it.created.plusDays(it.user.userSettings.uploadFileExpirationDays) < LocalDateTime.now()
+        }
         val fileNames = result.map { it.encryptedFilename }
         result.forEach {
             it.delete()
