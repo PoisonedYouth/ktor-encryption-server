@@ -12,6 +12,7 @@ import com.poisonedyouth.application.ErrorCode.USER_ALREADY_EXIST
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.UserSettings
+import com.poisonedyouth.domain.defaultSecurityFileSettings
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
@@ -57,7 +58,8 @@ class UserServiceImpl(
                         encryptionResult = encryptionResult,
                         userSettings = UserSettings(
                             uploadFileExpirationDays = userDto.userSettings.uploadFileExpirationDays
-                        )
+                        ),
+                        securitySettings = defaultSecurityFileSettings()
                     )
                 ).username
             )
@@ -75,7 +77,11 @@ class UserServiceImpl(
                 logger.error("User with username '${userDto.username}' does not exist.")
                 return ApiResult.Failure(USER_NOT_FOUND, "User with username '${userDto.username}' does not exist.")
             } else {
-                val decryptedPassword = EncryptionManager.decryptString(existingUser.encryptionResult, userDto.password)
+                val decryptedPassword = EncryptionManager.decryptString(
+                    existingUser.encryptionResult,
+                    existingUser.securitySettings,
+                    userDto.password
+                )
                 if (decryptedPassword != userDto.password) {
                     logger.error("Password for user with username '${userDto.username}' is wrong.")
                     ApiResult.Failure(

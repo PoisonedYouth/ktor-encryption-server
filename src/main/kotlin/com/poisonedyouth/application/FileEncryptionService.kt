@@ -2,6 +2,7 @@ package com.poisonedyouth.application
 
 import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.domain.UploadFile
+import com.poisonedyouth.domain.defaultSecurityFileSettings
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.security.EncryptionManager
 import io.ktor.http.content.MultiPartData
@@ -43,7 +44,8 @@ class FileEncryptionServiceImpl(
                             UploadFile(
                                 filename = name,
                                 encryptedFilename = encryptedName,
-                                encryptionResult = encryptionResult.second
+                                encryptionResult = encryptionResult.second,
+                                settings = defaultSecurityFileSettings()
                             )
                         )
                     )
@@ -63,6 +65,7 @@ class FileEncryptionServiceImpl(
                 EncryptionManager.decryptStream(
                     downloadFileDto.password,
                     uploadFile.encryptionResult,
+                    uploadFile.settings,
                     File("$UPLOAD_DIRECTORY/${uploadFile.encryptedFilename}"),
                     outputFile
                 )

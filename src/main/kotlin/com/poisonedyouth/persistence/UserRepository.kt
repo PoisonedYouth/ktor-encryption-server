@@ -37,6 +37,7 @@ class UserRepositoryImpl : UserRepository {
                     created = currentDateTime
                     lastUpdated = created
                 }
+                securitySettings = SecuritySettingsEntity.newFromSecuritySettings(user.securitySettings)
             }
 
             user.copy(
@@ -92,6 +93,7 @@ fun UserEntity.toUser(): User {
             salt = this.salt
         ),
         userSettings = this.userSettings.toUserSettings(),
+        securitySettings = this.securitySettings.toSecuritySettings(),
         created = this.created.truncatedTo(ChronoUnit.SECONDS),
         lastUpdated = this.lastUpdated.truncatedTo(ChronoUnit.SECONDS),
     )

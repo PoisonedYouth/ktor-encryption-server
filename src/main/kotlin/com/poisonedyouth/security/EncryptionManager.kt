@@ -1,6 +1,7 @@
 package com.poisonedyouth.security
 
 import com.poisonedyouth.configuration.ApplicationConfiguration
+import com.poisonedyouth.domain.SecuritySettings
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
@@ -82,10 +83,16 @@ object EncryptionManager {
     fun decryptStream(
         password: String,
         encryptionResult: FileEncryptionResult,
+        settings: SecuritySettings,
         encryptedFile: File,
         outputFile: File
     ): File {
-        val key: SecretKey = generateSecretKey(password, encryptionResult.salt)
+        val key: SecretKey = generateSecretKey(
+            password = password,
+            salt = encryptionResult.salt,
+            iterationCount = settings.iterationCount,
+            passwordKeySize = settings.passwordKeySize
+        )
         val (cipher, spec) = setupCipher(encryptionResult.nonce)
         cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
@@ -117,7 +124,12 @@ object EncryptionManager {
         val password = PasswordManager.createRandomPassword()
         val salt = generateSalt()
 
-        val key: SecretKey = generateSecretKey(password, salt)
+        val key: SecretKey = generateSecretKey(
+            password = password,
+            salt = salt,
+            iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
+            passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+        )
 
         val nonce = createNonce()
 
@@ -149,7 +161,12 @@ object EncryptionManager {
     fun encryptPassword(password: String): PasswordEncryptionResult {
         val salt = generateSalt()
 
-        val key: SecretKey = generateSecretKey(password, salt)
+        val key: SecretKey = generateSecretKey(
+            password = password,
+            salt = salt,
+            iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
+            passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+        )
 
         val nonce = createNonce()
 
@@ -183,8 +200,17 @@ object EncryptionManager {
         return salt
     }
 
-    fun decryptString(encryptionResult: PasswordEncryptionResult, password: String): String {
-        val key: SecretKey = generateSecretKey(password, encryptionResult.salt)
+    fun decryptString(
+        encryptionResult: PasswordEncryptionResult,
+        settings: SecuritySettings,
+        password: String
+    ): String {
+        val key: SecretKey = generateSecretKey(
+            password = password,
+            salt = encryptionResult.salt,
+            iterationCount = settings.iterationCount,
+            passwordKeySize = settings.passwordKeySize
+        )
 
         val messageDigest = getMessageDigest()
         messageDigest.update(encryptionResult.encryptedPassword)
@@ -211,11 +237,16 @@ object EncryptionManager {
     private fun getMessageDigest(): MessageDigest =
         MessageDigest.getInstance(ApplicationConfiguration.securityConfig.fileIntegrityCheckHashingAlgorithm)
 
-    private fun generateSecretKey(password: String, salt: ByteArray): SecretKey {
+    private fun generateSecretKey(
+        password: String,
+        salt: ByteArray,
+        iterationCount: Int,
+        passwordKeySize: Int
+    ): SecretKey {
         val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
         val passwordBasedEncryptionKeySpec: KeySpec = PBEKeySpec(
-            password.toCharArray(), salt, ApplicationConfiguration.securityConfig.defaultIterationCount,
-            ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+            password.toCharArray(), salt, iterationCount,
+            passwordKeySize
         )
         val secretKeyFromPBKDF2 = secretKeyFactory.generateSecret(passwordBasedEncryptionKeySpec)
         return SecretKeySpec(secretKeyFromPBKDF2.encoded, "AES")

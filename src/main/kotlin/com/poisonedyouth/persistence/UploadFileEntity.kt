@@ -15,6 +15,7 @@ class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
     var salt by UploadFileTable.salt
     var created by UploadFileTable.created
     var user by UserEntity referencedOn UploadFileTable.user
+    var settings by SecuritySettingsEntity referencedOn UploadFileTable.settings
 
     companion object : LongEntityClass<UploadFileEntity>(UploadFileTable)
 }
@@ -28,4 +29,5 @@ object UploadFileTable : LongIdTable("upload_file", "id") {
     val iv = binary("iv")
     val created = datetime("created")
     val user = reference("user_id", UserTable)
+    val settings = reference("settings_id", SecuritySettingsTable)
 }

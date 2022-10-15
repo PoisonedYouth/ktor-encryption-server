@@ -2,6 +2,7 @@ package com.poisonedyouth.persistence
 
 import com.poisonedyouth.application.UPLOAD_DIRECTORY
 import com.poisonedyouth.domain.UploadFile
+import com.poisonedyouth.domain.SecuritySettings
 import com.poisonedyouth.security.FileEncryptionResult
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -30,6 +31,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             nonce = uploadFile.encryptionResult.nonce
             created = currentDateTime
             user = UserEntity.find { UserTable.username eq uploadFile.owner!!.username }.first()
+            settings = SecuritySettingsEntity.newFromSecuritySettings(uploadFile.settings)
         }
 
         uploadFile.copy(
@@ -105,5 +107,15 @@ fun UploadFileEntity.toUploadFile() = UploadFile(
         salt = this.salt
     ),
     owner = this.user.toUser(),
+    settings = this.settings.toSecuritySettings(),
     created = this.created
+)
+
+fun SecuritySettingsEntity.toSecuritySettings() = SecuritySettings(
+    fileIntegrityCheckHashingAlgorithm = this.fileIntegrityCheckHashingAlgorithm,
+    passwordKeySize = this.passwordKeySize,
+    nonceLength = this.nonceLength,
+    saltLength = this.saltLength,
+    iterationCount = this.iterationCount,
+    gcmParameterSpecLength = this.gcmParameterSpecLength
 )
