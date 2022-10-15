@@ -2,13 +2,12 @@ package com.poisonedyouth.configuration
 
 import io.ktor.server.application.Application
 
-class ApplicationConfiguration {
+object ApplicationConfiguration {
     lateinit var databaseConfig: DatabaseConfig
     lateinit var securityConfig: SecurityConfig
 }
 
-fun Application.setupApplicationConfiguration(): ApplicationConfiguration {
-    val appConfig = ApplicationConfiguration()
+fun Application.setupApplicationConfiguration() {
 
     // Database
     val databaseObject = environment.config.config("ktor.database")
@@ -17,7 +16,7 @@ fun Application.setupApplicationConfiguration(): ApplicationConfiguration {
     val user = databaseObject.property("user").getString()
     val password = databaseObject.property("password").getString()
     val maxPoolSize = databaseObject.property("maxPoolSize").getString().toInt()
-    appConfig.databaseConfig = DatabaseConfig(
+    ApplicationConfiguration.databaseConfig = DatabaseConfig(
         driverClass = driverClass,
         url = url,
         user = user,
@@ -33,7 +32,7 @@ fun Application.setupApplicationConfiguration(): ApplicationConfiguration {
     val defaultSaltLength = securityObject.property("defaultSaltLength").getString().toInt()
     val defaultIterationCount = securityObject.property("defaultIterationCount").getString().toInt()
     val defaultGcmParameterSpecLength = securityObject.property("defaultGcmParameterSpecLength").getString().toInt()
-    appConfig.securityConfig = SecurityConfig(
+    ApplicationConfiguration.securityConfig = SecurityConfig(
         fileIntegrityCheckHashingAlgorithm = fileIntegrityCheckHashingAlgorithm,
         defaultPasswordKeySize = defaultPasswordKeySize,
         defaultNonceLength = defaultNonceLength,
@@ -41,7 +40,6 @@ fun Application.setupApplicationConfiguration(): ApplicationConfiguration {
         defaultIterationCount = defaultIterationCount,
         defaultGcmParameterSpecLength = defaultGcmParameterSpecLength
     )
-    return appConfig
 }
 
 data class DatabaseConfig(

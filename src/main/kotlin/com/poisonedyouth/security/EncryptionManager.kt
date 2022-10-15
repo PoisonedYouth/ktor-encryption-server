@@ -1,5 +1,6 @@
 package com.poisonedyouth.security
 
+import com.poisonedyouth.configuration.ApplicationConfiguration
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
@@ -75,16 +76,6 @@ data class PasswordEncryptionResult(
         return result
     }
 }
-
-private const val DEFAULT_PASSWORD_KEY_SIZE = 256
-
-private const val DEFAULT_NONCE_LENGTH = 32
-
-private const val DEFAULT_SALT_LENGTH = 64
-
-private const val DEFAULT_ITERATION_COUNT = 10000
-
-private const val DEFAULT_GCM_PARAMETER_SPEC_LENGTH = 16 * 8
 
 object EncryptionManager {
 
@@ -180,13 +171,13 @@ object EncryptionManager {
 
     private fun createNonce(): ByteArray {
         val random = SecureRandom.getInstanceStrong()
-        val nonce = ByteArray(DEFAULT_NONCE_LENGTH)
+        val nonce = ByteArray(ApplicationConfiguration.securityConfig.defaultNonceLength)
         random.nextBytes(nonce)
         return nonce
     }
 
     private fun generateSalt(): ByteArray {
-        val salt = ByteArray(DEFAULT_SALT_LENGTH)
+        val salt = ByteArray(ApplicationConfiguration.securityConfig.defaultSaltLength)
         val random: SecureRandom = SecureRandom.getInstanceStrong()
         random.nextBytes(salt)
         return salt
@@ -213,17 +204,18 @@ object EncryptionManager {
 
     private fun setupCipher(nonce: ByteArray): Pair<Cipher, GCMParameterSpec> {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(DEFAULT_GCM_PARAMETER_SPEC_LENGTH, nonce)
+        val spec = GCMParameterSpec(ApplicationConfiguration.securityConfig.defaultGcmParameterSpecLength, nonce)
         return Pair(cipher, spec)
     }
 
-    private fun getMessageDigest(): MessageDigest = MessageDigest.getInstance("SHA-512")
+    private fun getMessageDigest(): MessageDigest =
+        MessageDigest.getInstance(ApplicationConfiguration.securityConfig.fileIntegrityCheckHashingAlgorithm)
 
     private fun generateSecretKey(password: String, salt: ByteArray): SecretKey {
         val secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
         val passwordBasedEncryptionKeySpec: KeySpec = PBEKeySpec(
-            password.toCharArray(), salt, DEFAULT_ITERATION_COUNT,
-            DEFAULT_PASSWORD_KEY_SIZE
+            password.toCharArray(), salt, ApplicationConfiguration.securityConfig.defaultIterationCount,
+            ApplicationConfiguration.securityConfig.defaultPasswordKeySize
         )
         val secretKeyFromPBKDF2 = secretKeyFactory.generateSecret(passwordBasedEncryptionKeySpec)
         return SecretKeySpec(secretKeyFromPBKDF2.encoded, "AES")

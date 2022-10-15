@@ -1,5 +1,6 @@
 package com.poisonedyouth
 
+import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.configuration.setupApplicationConfiguration
 import com.poisonedyouth.dependencyinjection.setupKoin
 import com.poisonedyouth.expiration.setupCleanupTask
@@ -17,8 +18,8 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // application.conf references the main function. This annotation prevents
 // the IDE from marking it as unused.
 fun Application.module() {
-    val applicationConfiguration = setupApplicationConfiguration()
-    val dataSource = setupDatabase(applicationConfiguration)
+    setupApplicationConfiguration()
+    val dataSource = setupDatabase(ApplicationConfiguration)
     migrateDatabaseSchema(dataSource)
 
     setupKoin()
