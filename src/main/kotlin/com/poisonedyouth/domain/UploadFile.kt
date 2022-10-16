@@ -12,6 +12,7 @@ data class UploadFile(
     val encryptionResult: FileEncryptionResult,
     val created: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
     val owner: User? = null,
+    val settings: SecuritySettings
 )
 
 fun UploadFile.toUploadFileOverviewDto() = UploadFileOverviewDto(

@@ -18,6 +18,7 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
     var created by UserTable.created
     var lastUpdated by UserTable.lastUpdated
     var userSettings by UserSettingsEntity referencedOn UserTable.userSettings
+    var securitySettings by SecuritySettingsEntity referencedOn UserTable.securitySettings
 
     companion object : LongEntityClass<UserEntity>(UserTable) {
         fun findUserOrThrow(username: String): UserEntity {
@@ -37,4 +38,5 @@ object UserTable : LongIdTable("app_user", "id") {
     val created = datetime("created")
     val lastUpdated = datetime("last_updated")
     val userSettings = reference("user_settings_id", UserSettingsTable)
+    val securitySettings = reference("security_settings_id", SecuritySettingsTable)
 }
