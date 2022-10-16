@@ -4,6 +4,7 @@ import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.defaultSecurityFileSettings
 import com.poisonedyouth.persistence.UploadFileRepository
+import com.poisonedyouth.security.EncryptionException
 import com.poisonedyouth.security.EncryptionManager
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
@@ -13,31 +14,28 @@ import org.apache.commons.lang3.RandomStringUtils
 import java.io.File
 import java.util.*
 
+const val UPLOAD_DIRECTORY = "./uploads"
+const val DOWNLOAD_DIRECTORY = "./downloads"
+
 interface FileEncryptionService {
     suspend fun encryptFiles(multipart: MultiPartData): List<Pair<String, UploadFile>>
     suspend fun decryptFile(downloadFileDto: DownloadFileDto): File
 }
 
-const val UPLOAD_DIRECTORY = "./uploads"
-const val DOWNLOAD_DIRECTORY = "./downloads"
-
-private const val RANDOM_PASSWORD_LENGTH = 16
-
 class FileEncryptionServiceImpl(
     private val uploadFileRepository: UploadFileRepository
 ) : FileEncryptionService {
-
     override suspend fun encryptFiles(multipart: MultiPartData): List<Pair<String, UploadFile>> {
         val resultList = mutableListOf<Pair<String, UploadFile>>()
         multipart.forEachPart { part ->
             if (part is PartData.FileItem) {
-                val name = part.originalFileName ?: RandomStringUtils.randomAlphabetic(RANDOM_PASSWORD_LENGTH)
+                val name = part.originalFileName ?: RandomStringUtils.randomAlphabetic(32)
                 val encryptedName = UUID.randomUUID().toString()
                 val file =
                     File("$UPLOAD_DIRECTORY/$encryptedName")
 
-                part.streamProvider().use { its ->
-                    val encryptionResult = EncryptionManager.encryptSteam(its, file)
+                part.streamProvider().use { inputStream ->
+                    val encryptionResult = EncryptionManager.encryptSteam(inputStream, file)
                     resultList.add(
                         Pair(
                             encryptionResult.first,
@@ -56,7 +54,6 @@ class FileEncryptionServiceImpl(
         return resultList
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun decryptFile(downloadFileDto: DownloadFileDto): File {
         val uploadFile = uploadFileRepository.findBy(downloadFileDto.filename)
         if (uploadFile != null) {
@@ -69,7 +66,7 @@ class FileEncryptionServiceImpl(
                     File("$UPLOAD_DIRECTORY/${uploadFile.encryptedFilename}"),
                     outputFile
                 )
-            } catch (e: Exception) {
+            } catch (e: EncryptionException) {
                 outputFile.delete()
                 throw e
             }

@@ -1,5 +1,6 @@
 package com.poisonedyouth.plugins
 
+import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.FileHandler
@@ -79,8 +80,10 @@ fun Routing.configureUploadRouting() {
         val result =
             if (encryptedFilename != null && password != null) {
                 fileHandler.download(
-                    encryptedFilename = encryptedFilename,
-                    password = password,
+                    DownloadFileDto(
+                        filename = encryptedFilename,
+                        password = password
+                    ),
                     ipAddress = call.request.origin.remoteHost
                 )
             } else {

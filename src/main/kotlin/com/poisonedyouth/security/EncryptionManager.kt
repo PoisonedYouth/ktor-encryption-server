@@ -10,6 +10,8 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
 import java.security.MessageDigest
@@ -79,7 +81,9 @@ data class PasswordEncryptionResult(
 }
 
 object EncryptionManager {
+    private val logger: Logger = LoggerFactory.getLogger(EncryptionManager::class.java)
 
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     fun decryptStream(
         password: String,
         encryptionResult: FileEncryptionResult,
@@ -87,103 +91,120 @@ object EncryptionManager {
         encryptedFile: File,
         outputFile: File
     ): File {
-        val key: SecretKey = generateSecretKey(
-            password = password,
-            salt = encryptionResult.salt,
-            iterationCount = settings.iterationCount,
-            passwordKeySize = settings.passwordKeySize
-        )
-        val (cipher, spec) = setupCipher(encryptionResult.nonce)
-        cipher.init(Cipher.DECRYPT_MODE, key, spec)
+        try {
+            val key: SecretKey = generateSecretKey(
+                password = password,
+                salt = encryptionResult.salt,
+                iterationCount = settings.iterationCount,
+                passwordKeySize = settings.passwordKeySize
+            )
+            val (cipher, spec) = setupCipher(encryptionResult.nonce)
+            cipher.init(Cipher.DECRYPT_MODE, key, spec)
 
-        val messageDigest = getMessageDigest()
+            val messageDigest = getMessageDigest()
 
-        val cipherInputStream = CipherInputStream(encryptedFile.inputStream(), cipher)
-        outputFile.outputStream().use {
-            cipherInputStream.use { encryptedInputStream ->
+            val cipherInputStream = CipherInputStream(encryptedFile.inputStream(), cipher)
+            outputFile.outputStream().use {
+                cipherInputStream.use { encryptedInputStream ->
+                    val buffer = ByteArray(cipher.blockSize)
+                    var nread: Int
+                    while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
+                        it.write(buffer, 0, nread)
+                        messageDigest.update(buffer, 0, nread)
+                    }
+                    it.flush()
+                }
+            }
+            val digest = messageDigest.digest()
+            if (!digest.contentEquals(encryptionResult.hashSum)) {
+                throw IntegrityFailedException(
+                    "Integrity check failed (expected: " +
+                        "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()})."
+                )
+            }
+            return outputFile
+        } catch (e: Exception) {
+            logger.error("Failed to decrypt file '$encryptedFile'.", e)
+            throw EncryptionException("Failed to decrypt file '$encryptedFile'.", e)
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    fun encryptSteam(inputStream: InputStream, file: File): Pair<String, FileEncryptionResult> {
+        try {
+            val password = PasswordManager.createRandomPassword()
+            val salt = generateSalt()
+
+            val key: SecretKey = generateSecretKey(
+                password = password,
+                salt = salt,
+                iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
+                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+            )
+
+            val nonce = createNonce()
+
+            val (cipher, spec) = setupCipher(nonce)
+            cipher.init(Cipher.ENCRYPT_MODE, key, spec)
+
+            val digest = getMessageDigest()
+
+            CipherOutputStream(file.outputStream(), cipher).use { encryptedOutputStream ->
                 val buffer = ByteArray(cipher.blockSize)
                 var nread: Int
-                while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
-                    it.write(buffer, 0, nread)
-                    messageDigest.update(buffer, 0, nread)
+                while (inputStream.read(buffer).also { nread = it } > 0) {
+                    encryptedOutputStream.write(buffer, 0, nread)
+                    digest.update(buffer, 0, nread)
                 }
-                it.flush()
+                encryptedOutputStream.flush()
             }
-        }
-        val digest = messageDigest.digest()
-        if (!digest.contentEquals(encryptionResult.hashSum)) {
-            throw IntegrityFailedException(
-                "Integrity check failed (expected: " +
-                    "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()})."
+            inputStream.close()
+            return Pair(
+                password, FileEncryptionResult(
+                    initializationVector = cipher.iv,
+                    nonce = nonce,
+                    hashSum = digest.digest(),
+                    salt = salt
+                )
             )
+        } catch (e: Exception) {
+            logger.error("Failed to encrypt stream.", e)
+            throw EncryptionException("Failed to encrypt stream.", e)
         }
-        return outputFile
     }
 
-    fun encryptSteam(inputstream: InputStream, file: File): Pair<String, FileEncryptionResult> {
-        val password = PasswordManager.createRandomPassword()
-        val salt = generateSalt()
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    fun encryptPassword(password: String): PasswordEncryptionResult {
+        try {
+            val salt = generateSalt()
 
-        val key: SecretKey = generateSecretKey(
-            password = password,
-            salt = salt,
-            iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
-            passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
-        )
+            val key: SecretKey = generateSecretKey(
+                password = password,
+                salt = salt,
+                iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
+                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+            )
 
-        val nonce = createNonce()
+            val nonce = createNonce()
 
-        val (cipher, spec) = setupCipher(nonce)
-        cipher.init(Cipher.ENCRYPT_MODE, key, spec)
+            val (cipher, spec) = setupCipher(nonce)
+            cipher.init(Cipher.ENCRYPT_MODE, key, spec)
 
-        val digest = getMessageDigest()
+            val encryptedPassword = cipher.doFinal(password.encodeToByteArray())
 
-        CipherOutputStream(file.outputStream(), cipher).use { encryptedOutputStream ->
-            val buffer = ByteArray(cipher.blockSize)
-            var nread: Int
-            while (inputstream.read(buffer).also { nread = it } > 0) {
-                encryptedOutputStream.write(buffer, 0, nread)
-                digest.update(buffer, 0, nread)
-            }
-            encryptedOutputStream.flush()
-        }
-        inputstream.close()
-        return Pair(
-            password, FileEncryptionResult(
+            val messageDigest = getMessageDigest()
+            messageDigest.update(encryptedPassword)
+            return PasswordEncryptionResult(
                 initializationVector = cipher.iv,
+                hashSum = messageDigest.digest(),
                 nonce = nonce,
-                hashSum = digest.digest(),
+                encryptedPassword = encryptedPassword,
                 salt = salt
             )
-        )
-    }
-
-    fun encryptPassword(password: String): PasswordEncryptionResult {
-        val salt = generateSalt()
-
-        val key: SecretKey = generateSecretKey(
-            password = password,
-            salt = salt,
-            iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
-            passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
-        )
-
-        val nonce = createNonce()
-
-        val (cipher, spec) = setupCipher(nonce)
-        cipher.init(Cipher.ENCRYPT_MODE, key, spec)
-
-        val encryptedPassword = cipher.doFinal(password.encodeToByteArray())
-
-        val messageDigest = getMessageDigest()
-        messageDigest.update(encryptedPassword)
-        return PasswordEncryptionResult(
-            initializationVector = cipher.iv,
-            hashSum = messageDigest.digest(),
-            nonce = nonce,
-            encryptedPassword = encryptedPassword,
-            salt = salt
-        )
+        } catch (e: Exception) {
+            logger.error("Failed to encrypt password.", e)
+            throw EncryptionException("Failed to encrypt password.", e)
+        }
     }
 
     private fun createNonce(): ByteArray {
@@ -200,32 +221,38 @@ object EncryptionManager {
         return salt
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     fun decryptString(
         encryptionResult: PasswordEncryptionResult,
         settings: SecuritySettings,
         password: String
     ): String {
-        val key: SecretKey = generateSecretKey(
-            password = password,
-            salt = encryptionResult.salt,
-            iterationCount = settings.iterationCount,
-            passwordKeySize = settings.passwordKeySize
-        )
-
-        val messageDigest = getMessageDigest()
-        messageDigest.update(encryptionResult.encryptedPassword)
-        val digest = messageDigest.digest()
-        if (!digest.contentEquals(encryptionResult.hashSum)) {
-            throw IntegrityFailedException(
-                "Integrity check failed (expected: " +
-                    "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()}."
+        try {
+            val key: SecretKey = generateSecretKey(
+                password = password,
+                salt = encryptionResult.salt,
+                iterationCount = settings.iterationCount,
+                passwordKeySize = settings.passwordKeySize
             )
-        }
 
-        val (cipher, spec) = setupCipher(encryptionResult.nonce)
-        cipher.init(Cipher.DECRYPT_MODE, key, spec)
-        val decryptedPassword = cipher.doFinal(encryptionResult.encryptedPassword)
-        return decryptedPassword.decodeToString()
+            val messageDigest = getMessageDigest()
+            messageDigest.update(encryptionResult.encryptedPassword)
+            val digest = messageDigest.digest()
+            if (!digest.contentEquals(encryptionResult.hashSum)) {
+                throw IntegrityFailedException(
+                    "Integrity check failed (expected: " +
+                        "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()}."
+                )
+            }
+
+            val (cipher, spec) = setupCipher(encryptionResult.nonce)
+            cipher.init(Cipher.DECRYPT_MODE, key, spec)
+            val decryptedPassword = cipher.doFinal(encryptionResult.encryptedPassword)
+            return decryptedPassword.decodeToString()
+        } catch (e: Exception) {
+            logger.error("Failed to decrypt string.", e)
+            throw EncryptionException("Failed to decrypt string.", e)
+        }
     }
 
     private fun setupCipher(nonce: ByteArray): Pair<Cipher, GCMParameterSpec> {

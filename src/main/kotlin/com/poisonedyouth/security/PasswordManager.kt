@@ -10,20 +10,19 @@ import org.passay.LengthRule
 import org.passay.PasswordData
 import org.passay.PasswordGenerator
 import org.passay.PasswordValidator
-import org.passay.RuleResult
 
 
 const val MINIMUM_PASSWORD_LENGTH = 16
 
 object PasswordManager {
-    val characterRules = listOf(
+    private val characterRules = listOf(
         CharacterRule(Alphabetical),
         CharacterRule(Digit),
         CharacterRule(Special),
         CharacterRule(UpperCase),
         CharacterRule(LowerCase),
     )
-    val lengthRule = LengthRule(16)
+    private val lengthRule = LengthRule(MINIMUM_PASSWORD_LENGTH)
     private val passwordGenerator = PasswordGenerator()
     private val passwordValidator = PasswordValidator(characterRules + lengthRule)
 
@@ -32,7 +31,7 @@ object PasswordManager {
     }
 
     fun validatePassword(password: String): List<String> {
-        val password = PasswordData(password)
-        return passwordValidator.getMessages(passwordValidator.validate(password))
+        val passwordData = PasswordData(password)
+        return passwordValidator.getMessages(passwordValidator.validate(passwordData))
     }
 }

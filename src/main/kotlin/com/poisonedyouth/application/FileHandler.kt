@@ -3,19 +3,19 @@ package com.poisonedyouth.application
 import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.api.UploadFileDto
 import com.poisonedyouth.api.UploadFileOverviewDto
-import com.poisonedyouth.application.ErrorCode.ENCRYPTION_FAILURE
+import com.poisonedyouth.application.ApiResult.*
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
-import com.poisonedyouth.application.ErrorCode.INTEGRITY_CHECK_FAILED
 import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.domain.UploadAction.DOWNLOAD
 import com.poisonedyouth.domain.UploadAction.UPLOAD
+import com.poisonedyouth.domain.UploadFile
+import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.toUploadFileOverviewDto
 import com.poisonedyouth.persistence.UploadFileRepository
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.plugins.ENCRYPTED_FILENAME_QUERY_PARAM
 import com.poisonedyouth.plugins.PASSWORD_QUERY_PARAM
-import com.poisonedyouth.security.IntegrityFailedException
 import io.ktor.http.RequestConnectionPoint
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
@@ -34,7 +34,6 @@ interface FileHandler {
     ): ApiResult<List<UploadFileDto>>
 
     suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File>
-    suspend fun download(encryptedFilename: String, password: String, ipAddress: String): ApiResult<File>
     suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
 }
 
@@ -44,33 +43,24 @@ class FileHandlerImpl(
     private val userRepository: UserRepository,
     private val uploadFileHistoryService: UploadFileHistoryService,
 ) : FileHandler {
-    private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(FileHandler::class.java)
 
-    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun upload(
         username: String,
         origin: RequestConnectionPoint,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
-        try {
+        return try {
             val existingUser = userRepository.findByUsername(username)
             if (existingUser == null) {
                 logger.error("User with username '$username' does not exist.")
-                ApiResult.Failure(USER_NOT_FOUND, "User with username '$username' does not exist.")
+                throw ApplicationServiceException(USER_NOT_FOUND, "User with username '$username' does not exist.")
             }
 
             val result = fileEncryptionService.encryptFiles(multiPartData)
 
-            return ApiResult.Success(result.onEach {
-                val updatedUploadFile = it.second.copy(
-                    owner = existingUser
-                )
-                uploadFileRepository.save(updatedUploadFile)
-                uploadFileHistoryService.addUploadFileHistoryEntry(
-                    ipAddress = origin.remoteHost,
-                    action = UPLOAD,
-                    encryptedFilename = it.second.encryptedFilename
-                )
+            Success(result.onEach {
+                handleUploadFile(it, existingUser, origin)
             }.map {
                 UploadFileDto(
                     filename = it.second.filename,
@@ -80,10 +70,26 @@ class FileHandlerImpl(
                     deleteLink = buildDeleteLink(origin, it.second.encryptedFilename)
                 )
             })
-        } catch (e: Exception) {
-            logger.error("Upload of files failed.", e)
-            return ApiResult.Failure(ENCRYPTION_FAILURE, "Upload of failes failed.")
+        } catch (e: GeneralException) {
+            Failure(e.errorCode, e.message)
         }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    private fun handleUploadFile(
+        it: Pair<String, UploadFile>,
+        existingUser: User,
+        origin: RequestConnectionPoint
+    ) {
+        val updatedUploadFile = it.second.copy(
+            owner = existingUser
+        )
+        uploadFileRepository.save(updatedUploadFile)
+        uploadFileHistoryService.addUploadFileHistoryEntry(
+            ipAddress = origin.remoteHost,
+            action = UPLOAD,
+            encryptedFilename = it.second.encryptedFilename
+        )
     }
 
     private fun buildDeleteLink(origin: RequestConnectionPoint, encryptedFilename: String): String {
@@ -114,46 +120,29 @@ class FileHandlerImpl(
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File> {
         return try {
-            ApiResult.Success(fileEncryptionService.decryptFile(downloadFileDto).also {
+            Success(fileEncryptionService.decryptFile(downloadFileDto).also {
                 uploadFileHistoryService.addUploadFileHistoryEntry(
                     ipAddress = ipAddress,
                     action = DOWNLOAD,
                     encryptedFilename = downloadFileDto.filename
                 )
             })
-        } catch (e: IntegrityFailedException) {
-            logger.error("Integrity check for file '${downloadFileDto.filename}' failed.", e)
-            ApiResult.Failure(
-                INTEGRITY_CHECK_FAILED,
-                "Integrity check for file '${downloadFileDto.filename}' failed."
-            )
         } catch (e: IllegalStateException) {
             logger.error("Download file '${downloadFileDto.filename}' not found.", e)
-            ApiResult.Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")
-        } catch (e: Exception) {
-            logger.error("Failed to decrypt file '$downloadFileDto'.", e)
-            ApiResult.Failure(ENCRYPTION_FAILURE, "")
+            Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")
+        } catch (e: GeneralException) {
+            Failure(e.errorCode, e.message)
         }
-    }
-
-    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun download(encryptedFilename: String, password: String, ipAddress: String): ApiResult<File> {
-        val downloadFileDto = DownloadFileDto(
-            password = password,
-            filename = encryptedFilename
-        )
-        return download(downloadFileDto, ipAddress)
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>> {
         return try {
-            ApiResult.Success(uploadFileRepository.findAllByUsername(username).map {
+            Success(uploadFileRepository.findAllByUsername(username).map {
                 it.toUploadFileOverviewDto()
             })
-        } catch (e: Exception) {
-            logger.error("Failed to load upload files for user with username '$username'.", e)
-            ApiResult.Failure(ENCRYPTION_FAILURE, "")
+        } catch (e: GeneralException) {
+            Failure(e.errorCode, e.message)
         }
     }
 
@@ -161,14 +150,12 @@ class FileHandlerImpl(
     override suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean> {
         return try {
             if (encryptedFilename == null) {
-                ApiResult.Failure(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
-            } else {
-                logger.info("Deleted upload file  with encrypted filename '$encryptedFilename'.")
-                ApiResult.Success(uploadFileRepository.deleteBy(username, encryptedFilename))
+                throw ApplicationServiceException(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
             }
-        } catch (e: Exception) {
-            logger.error("Failed to delete file '$encryptedFilename' for user with username '$username'.", e)
-            ApiResult.Failure(ENCRYPTION_FAILURE, "")
+            logger.info("Deleted upload file  with encrypted filename '$encryptedFilename'.")
+            Success(uploadFileRepository.deleteBy(username, encryptedFilename))
+        } catch (e: GeneralException) {
+            Failure(e.errorCode, e.message)
         }
     }
 }

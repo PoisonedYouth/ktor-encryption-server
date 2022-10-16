@@ -4,6 +4,8 @@ import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.UserSettings
 import com.poisonedyouth.security.PasswordEncryptionResult
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -18,67 +20,91 @@ interface UserRepository {
 }
 
 class UserRepositoryImpl : UserRepository {
+    private val logger: Logger = LoggerFactory.getLogger(UserRepository::class.java)
 
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun save(user: User): User = transaction {
-        val currentDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-        val existingUser = UserEntity.find { UserTable.username eq user.username }.firstOrNull()
-        if (existingUser == null) {
-            UserEntity.new {
-                username = user.username
-                password = user.encryptionResult.encryptedPassword
-                iv = user.encryptionResult.initializationVector
-                hashSum = user.encryptionResult.hashSum
-                nonce = user.encryptionResult.nonce
-                created = currentDateTime
-                lastUpdated = currentDateTime
-                salt = user.encryptionResult.salt
-                userSettings = UserSettingsEntity.new {
-                    uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
+        try {
+            val currentDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+            val existingUser = UserEntity.find { UserTable.username eq user.username }.firstOrNull()
+            if (existingUser == null) {
+                UserEntity.new {
+                    username = user.username
+                    password = user.encryptionResult.encryptedPassword
+                    iv = user.encryptionResult.initializationVector
+                    hashSum = user.encryptionResult.hashSum
+                    nonce = user.encryptionResult.nonce
                     created = currentDateTime
-                    lastUpdated = created
+                    lastUpdated = currentDateTime
+                    salt = user.encryptionResult.salt
+                    userSettings = UserSettingsEntity.new {
+                        uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
+                        created = currentDateTime
+                        lastUpdated = created
+                    }
+                    securitySettings = SecuritySettingsEntity.newFromSecuritySettings(user.securitySettings)
                 }
-                securitySettings = SecuritySettingsEntity.newFromSecuritySettings(user.securitySettings)
-            }
-
-            user.copy(
-                created = currentDateTime,
-                lastUpdated = currentDateTime
-            )
-        } else {
-            existingUser.username = user.username
-            existingUser.password = user.encryptionResult.encryptedPassword
-            existingUser.iv = user.encryptionResult.initializationVector
-            existingUser.hashSum = user.encryptionResult.hashSum
-            existingUser.nonce = user.encryptionResult.nonce
-            existingUser.created = user.created
-            existingUser.lastUpdated = currentDateTime
-            existingUser.salt = user.encryptionResult.salt
-            existingUser.userSettings = existingUser.userSettings.apply {
-                this.lastUpdated = currentDateTime
-                this.uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
-            }
-        }
-        user.copy(
-            lastUpdated = currentDateTime
-        )
-    }
-
-    override fun delete(username: String): Unit = transaction {
-        UserEntity.find { UserTable.username eq username }.firstOrNull().let {
-            if (it == null) {
-                error("User with username '${username}' does not exist!")
+                user.copy(
+                    created = currentDateTime,
+                    lastUpdated = currentDateTime
+                )
             } else {
-                it.delete()
+                existingUser.username = user.username
+                existingUser.password = user.encryptionResult.encryptedPassword
+                existingUser.iv = user.encryptionResult.initializationVector
+                existingUser.hashSum = user.encryptionResult.hashSum
+                existingUser.nonce = user.encryptionResult.nonce
+                existingUser.created = user.created
+                existingUser.lastUpdated = currentDateTime
+                existingUser.salt = user.encryptionResult.salt
+                existingUser.userSettings = existingUser.userSettings.apply {
+                    this.lastUpdated = currentDateTime
+                    this.uploadFileExpirationDays = user.userSettings.uploadFileExpirationDays
+                }
+                user.copy(
+                    lastUpdated = currentDateTime
+                )
             }
+        } catch (e: Exception) {
+            logger.error("Failed to save user '$user' to database.", e)
+            throw PersistenceException("Failed to save user '$user' to database.", e)
         }
     }
 
-    override fun findByUsername(username: String): User? = transaction {
-        UserEntity.find { UserTable.username eq username }.firstOrNull()?.toUser()
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override fun delete(username: String): Unit = transaction {
+        try {
+            UserEntity.find { UserTable.username eq username }.firstOrNull().let {
+                if (it == null) {
+                    error("User with username '${username}' does not exist!")
+                } else {
+                    it.delete()
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to delete user with username '$username' from database.", e)
+            throw PersistenceException("Failed to delete user with username '$username' from database.", e)
+        }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
+    override fun findByUsername(username: String): User? = transaction {
+        try {
+            UserEntity.find { UserTable.username eq username }.firstOrNull()?.toUser()
+        } catch (e: Exception) {
+            logger.error("Failed to find with username '$username' in database.", e)
+            throw PersistenceException("Failed to find with username '$username' in database.", e)
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findAll(): List<User> = transaction {
-        UserEntity.all().map { it.toUser() }
+        try {
+            UserEntity.all().map { it.toUser() }
+        } catch (e: Exception) {
+            logger.error("Failed to find all user in database.", e)
+            throw PersistenceException("Failed to find all user in database.", e)
+        }
     }
 }
 

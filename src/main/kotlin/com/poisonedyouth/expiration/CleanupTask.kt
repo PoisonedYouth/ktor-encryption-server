@@ -1,6 +1,7 @@
 package com.poisonedyouth.expiration
 
 import com.poisonedyouth.application.UPLOAD_DIRECTORY
+import com.poisonedyouth.persistence.PersistenceException
 import com.poisonedyouth.persistence.UploadFileRepository
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
@@ -19,10 +20,14 @@ class CleanupTask(
     override fun run() {
         logger.info("Start cleanup files...")
         File(UPLOAD_DIRECTORY).listFiles()?.forEach {
-            val result = uploadFileRepository.findBy(it.name)
-            if (result == null) {
-                logger.info("Delete orphaned upload file with encrypted filename '${it.name}'")
-                it.delete()
+            try {
+                val result = uploadFileRepository.findBy(it.name)
+                if (result == null) {
+                    logger.info("Delete orphaned upload file with encrypted filename '${it.name}'")
+                    it.delete()
+                }
+            } catch (e: PersistenceException){
+                logger.error("Failed to find file with name '$it.name'. Will be skipped...")
             }
         }
         logger.info("Finish cleanup files.")
