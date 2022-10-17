@@ -1,8 +1,8 @@
 package com.poisonedyouth.persistence
 
 import com.poisonedyouth.application.UPLOAD_DIRECTORY
-import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.SecuritySettings
+import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.security.FileEncryptionResult
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -27,6 +27,9 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun save(uploadFile: UploadFile): UploadFile = transaction {
         try {
+            if (UploadFileEntity.findByEncryptedFilename(uploadFile.encryptedFilename) != null) {
+                error("Upload file with encrypted filename '${uploadFile.encryptedFilename}' already exist.")
+            }
             val currentDateTime = LocalDateTime.now().truncatedTo(SECONDS)
             UploadFileEntity.new {
                 filename = uploadFile.filename

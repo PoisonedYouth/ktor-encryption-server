@@ -17,7 +17,11 @@ class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
     var user by UserEntity referencedOn UploadFileTable.user
     var settings by SecuritySettingsEntity referencedOn UploadFileTable.settings
 
-    companion object : LongEntityClass<UploadFileEntity>(UploadFileTable)
+    companion object : LongEntityClass<UploadFileEntity>(UploadFileTable) {
+        fun findByEncryptedFilename(encryptedFilename: String): UploadFileEntity? {
+            return UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.firstOrNull()
+        }
+    }
 }
 
 object UploadFileTable : LongIdTable("upload_file", "id") {
