@@ -90,7 +90,7 @@ class UserRepositoryImpl : UserRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findByUsername(username: String): User? = transaction {
         try {
-            UserEntity.find { UserTable.username eq username }.firstOrNull()?.toUser()
+            UserEntity.findUserOrNull(username)?.toUser()
         } catch (e: Exception) {
             logger.error("Failed to find with username '$username' in database.", e)
             throw PersistenceException("Failed to find with username '$username' in database.", e)
@@ -100,7 +100,7 @@ class UserRepositoryImpl : UserRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findAll(): List<User> = transaction {
         try {
-            UserEntity.all().map { it.toUser() }
+            UserEntity.findAll().map { it.toUser() }
         } catch (e: Exception) {
             logger.error("Failed to find all user in database.", e)
             throw PersistenceException("Failed to find all user in database.", e)

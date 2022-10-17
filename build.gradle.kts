@@ -72,6 +72,8 @@ dependencies {
     testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
+    testImplementation("io.mockk:mockk-jvm:1.13.2")
+
 }
 
 tasks.withType<Test> {

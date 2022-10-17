@@ -22,7 +22,7 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
-val bankingAppModule = module {
+val encryptionServerModule = module {
     single<UserRepository> { UserRepositoryImpl() }
     single<FileEncryptionService> { FileEncryptionServiceImpl(get()) }
     single<UploadFileRepository> { UploadFileRepositoryImpl() }
@@ -37,6 +37,6 @@ val bankingAppModule = module {
 fun Application.setupKoin() {
     install(Koin) {
         SLF4JLogger()
-        modules(bankingAppModule)
+        modules(encryptionServerModule)
     }
 }

@@ -25,6 +25,12 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
             return UserEntity.find { UserTable.username eq username }.firstOrNull()
                 ?: error("No user available for username '$username'.")
         }
+
+        fun findUserOrNull(username: String): UserEntity? {
+            return UserEntity.find { UserTable.username eq username }.firstOrNull()
+        }
+
+        fun findAll() = UserEntity.all()
     }
 }
 
