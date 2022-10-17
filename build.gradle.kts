@@ -73,3 +73,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
