@@ -157,9 +157,9 @@ fun UploadFileEntity.toUploadFile() = UploadFile(
 
 fun SecuritySettingsEntity.toSecuritySettings() = SecuritySettings(
     fileIntegrityCheckHashingAlgorithm = this.fileIntegrityCheckHashingAlgorithm,
-    passwordKeySize = this.passwordKeySize,
-    nonceLength = this.nonceLength,
-    saltLength = this.saltLength,
+    passwordKeySizeBytes = this.passwordKeySize,
+    nonceLengthBytes = this.nonceLength,
+    saltLengthBytes = this.saltLength,
     iterationCount = this.iterationCount,
     gcmParameterSpecLength = this.gcmParameterSpecLength
 )

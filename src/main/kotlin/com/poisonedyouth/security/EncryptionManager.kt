@@ -96,7 +96,7 @@ object EncryptionManager {
                 password = password,
                 salt = encryptionResult.salt,
                 iterationCount = settings.iterationCount,
-                passwordKeySize = settings.passwordKeySize
+                passwordKeySize = settings.passwordKeySizeBytes
             )
             val (cipher, spec) = setupCipher(encryptionResult.nonce)
             cipher.init(Cipher.DECRYPT_MODE, key, spec)
@@ -139,7 +139,7 @@ object EncryptionManager {
                 password = password,
                 salt = salt,
                 iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
-                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySizeBytes
             )
 
             val nonce = createNonce()
@@ -182,7 +182,7 @@ object EncryptionManager {
                 password = password,
                 salt = salt,
                 iterationCount = ApplicationConfiguration.securityConfig.defaultIterationCount,
-                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySize
+                passwordKeySize = ApplicationConfiguration.securityConfig.defaultPasswordKeySizeBytes
             )
 
             val nonce = createNonce()
@@ -209,13 +209,13 @@ object EncryptionManager {
 
     private fun createNonce(): ByteArray {
         val random = SecureRandom.getInstanceStrong()
-        val nonce = ByteArray(ApplicationConfiguration.securityConfig.defaultNonceLength)
+        val nonce = ByteArray(ApplicationConfiguration.securityConfig.defaultNonceLengthBytes)
         random.nextBytes(nonce)
         return nonce
     }
 
     private fun generateSalt(): ByteArray {
-        val salt = ByteArray(ApplicationConfiguration.securityConfig.defaultSaltLength)
+        val salt = ByteArray(ApplicationConfiguration.securityConfig.defaultSaltLengthBytes)
         val random: SecureRandom = SecureRandom.getInstanceStrong()
         random.nextBytes(salt)
         return salt
@@ -232,7 +232,7 @@ object EncryptionManager {
                 password = password,
                 salt = encryptionResult.salt,
                 iterationCount = settings.iterationCount,
-                passwordKeySize = settings.passwordKeySize
+                passwordKeySize = settings.passwordKeySizeBytes
             )
 
             val messageDigest = getMessageDigest()

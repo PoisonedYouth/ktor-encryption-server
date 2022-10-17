@@ -17,9 +17,9 @@ class SecuritySettingsEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<SecuritySettingsEntity>(SecuritySettingsTable) {
         fun newFromSecuritySettings(securitySettings: SecuritySettings) = SecuritySettingsEntity.new {
             fileIntegrityCheckHashingAlgorithm = securitySettings.fileIntegrityCheckHashingAlgorithm
-            passwordKeySize = securitySettings.passwordKeySize
-            nonceLength = securitySettings.nonceLength
-            saltLength = securitySettings.saltLength
+            passwordKeySize = securitySettings.passwordKeySizeBytes
+            nonceLength = securitySettings.nonceLengthBytes
+            saltLength = securitySettings.saltLengthBytes
             iterationCount = securitySettings.iterationCount
             gcmParameterSpecLength = securitySettings.gcmParameterSpecLength
         }

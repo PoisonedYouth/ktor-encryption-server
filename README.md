@@ -28,9 +28,9 @@ you can see the default values.
 ```
  security {
         fileIntegrityCheckHashingAlgorithm = "SHA-512"
-        defaultPasswordKeySize = 256
-        defaultNonceLength = 32
-        defaultSaltLength = 64
+        defaultPasswordKeySizeBytes = 256
+        defaultNonceLengthBytes = 32
+        defaultSaltLengthBytes = 64
         defaultIterationCount = 10000
         defaultGcmParameterSpecLength = 128
     }

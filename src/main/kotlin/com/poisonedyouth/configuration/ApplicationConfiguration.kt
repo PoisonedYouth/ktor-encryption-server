@@ -27,16 +27,16 @@ fun Application.setupApplicationConfiguration() {
     // Security
     val securityObject = environment.config.config("ktor.security")
     val fileIntegrityCheckHashingAlgorithm = securityObject.property("fileIntegrityCheckHashingAlgorithm").getString()
-    val defaultPasswordKeySize = securityObject.property("defaultPasswordKeySize").getString().toInt()
-    val defaultNonceLength = securityObject.property("defaultNonceLength").getString().toInt()
-    val defaultSaltLength = securityObject.property("defaultSaltLength").getString().toInt()
+    val defaultPasswordKeySize = securityObject.property("defaultPasswordKeySizeBytes").getString().toInt()
+    val defaultNonceLength = securityObject.property("defaultNonceLengthBytes").getString().toInt()
+    val defaultSaltLength = securityObject.property("defaultSaltLengthBytes").getString().toInt()
     val defaultIterationCount = securityObject.property("defaultIterationCount").getString().toInt()
     val defaultGcmParameterSpecLength = securityObject.property("defaultGcmParameterSpecLength").getString().toInt()
     ApplicationConfiguration.securityConfig = SecurityConfig(
         fileIntegrityCheckHashingAlgorithm = fileIntegrityCheckHashingAlgorithm,
-        defaultPasswordKeySize = defaultPasswordKeySize,
-        defaultNonceLength = defaultNonceLength,
-        defaultSaltLength = defaultSaltLength,
+        defaultPasswordKeySizeBytes = defaultPasswordKeySize,
+        defaultNonceLengthBytes = defaultNonceLength,
+        defaultSaltLengthBytes = defaultSaltLength,
         defaultIterationCount = defaultIterationCount,
         defaultGcmParameterSpecLength = defaultGcmParameterSpecLength
     )
@@ -52,9 +52,9 @@ data class DatabaseConfig(
 
 data class SecurityConfig(
     val fileIntegrityCheckHashingAlgorithm: String,
-    val defaultPasswordKeySize: Int,
-    val defaultNonceLength: Int,
-    val defaultSaltLength: Int,
+    val defaultPasswordKeySizeBytes: Int,
+    val defaultNonceLengthBytes: Int,
+    val defaultSaltLengthBytes: Int,
     val defaultIterationCount: Int,
     val defaultGcmParameterSpecLength: Int
 )
