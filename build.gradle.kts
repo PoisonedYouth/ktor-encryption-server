@@ -24,6 +24,13 @@ repositories {
     mavenCentral()
 }
 
+ktor{
+    docker{
+        localImageName.set("ktor-application-server")
+        imageTag.set("0.0.1")
+    }
+}
+
 dependencies {
     // ktor
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")

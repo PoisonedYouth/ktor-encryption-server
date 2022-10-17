@@ -49,7 +49,7 @@
 						{
 							"key": "file",
 							"type": "file",
-							"src": "/C:/Users/MatthiasSchenksevDes/OneDrive - sevDesk GmbH/Dokumente/response.txt"
+							"src": "sample.txt"
 						}
 					]
 				},
@@ -90,7 +90,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": "/C:/Users/MatthiasSchenksevDes/OneDrive - sevDesk GmbH/Dokumente/ShowAndTell07.07.22.odp"
+									"src": "sample.txt"
 								}
 							]
 						},
