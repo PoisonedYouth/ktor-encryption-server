@@ -73,7 +73,7 @@ fun Routing.configureUploadRouting() {
             }
         }
     }
-    get("/download") {
+    get("api/download") {
         val queryParameters = call.request.queryParameters
         val password = queryParameters[PASSWORD_QUERY_PARAM]
         val encryptedFilename = queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM]

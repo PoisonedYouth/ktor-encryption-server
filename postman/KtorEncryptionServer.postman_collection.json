@@ -264,7 +264,7 @@
 					"basic": [
 						{
 							"key": "password",
-							"value": "mypassword",
+							"value": "g2ptZ₠₴poEfHT“‹h",
 							"type": "string"
 						},
 						{
@@ -277,7 +277,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/api/uploads",
+					"raw": "http://localhost:8080/api/upload",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -285,7 +285,7 @@
 					"port": "8080",
 					"path": [
 						"api",
-						"uploads"
+						"upload"
 					]
 				}
 			},
@@ -323,7 +323,7 @@
 					"basic": [
 						{
 							"key": "password",
-							"value": "mypassword",
+							"value": "g2ptZ₠₴poEfHT“‹h",
 							"type": "string"
 						},
 						{
@@ -394,7 +394,7 @@
 					"basic": [
 						{
 							"key": "password",
-							"value": "mypassword",
+							"value": "g2ptZ₠₴poEfHT“‹h",
 							"type": "string"
 						},
 						{

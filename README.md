@@ -61,41 +61,45 @@ done in application settings ([application.conf](src/main/resources/application.
 
 ## Requests
 
-### Add new user
+### Add new user (POST: /api/user)
 
 This request is adding a new user with given username and password. Additionally a custom expiration period for upload files can be specified.
 The username must be unique accross all users and the password musst fulfill the mentioned
 requirements.
 
-### Upload files (authenticated)
+### Upload files (authenticated: POST: /api/upload)
 
 This request is uploading one or multiple files. Only authenticated user are able to execute this request. The result contains a list of upload files consist of original 
 filname, the random storage filename, the password for accessing upload and a link for downloading the file and a link for deleting the file.
 
-### Download files
+### Download files (GET: /api/download)
 
 This request downloads a single file, specifying the storage filename and the password.
 
-### Get uploads (authenticated)
+### Get uploads (authenticated: GET: /api/upload)
 
 This request returns a list of all active uploads of the user. Uploads which are already removed from server, because they are expired or deleted, 
 are not part of the list.
 
-### Delete upload file (authenticated)
+### Delete upload file (authenticated: DELETE: /api/upload)
 
 This request deletes an existing upload file from server. This also removes the history for this file.
 
-### Delete user (authenticated)
+### Delete user (authenticated: DELETE /api/user)
 
 This request deletes a user from server. This also removes all uploaded files of the user.
 
-### Get upload history (authenticated)
+### Get upload history (authenticated: GET: /api/upload/history)
 
 This request returns the upload history of the user. The history contains the upload and all the downloads of a file.
 
-### Update user settings (authenticated)
+### Update user settings (authenticated: PUT: /api/user/settings)
 
 This request updates the user settings.
+
+### Update user password (authenticated: PUT: /api/user/password)
+
+This request updates the user password.
 
 
 Sample requests can be found in a postman collection located in [Postman Collection](postman/KtorEncryptionServer.postman_collection.json)
