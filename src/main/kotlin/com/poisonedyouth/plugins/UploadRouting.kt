@@ -20,7 +20,9 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlin.io.path.name
 import org.koin.ktor.ext.inject
+import java.nio.file.Files
 
 const val ENCRYPTED_FILENAME_QUERY_PARAM = "encryptedfilename"
 
@@ -93,8 +95,11 @@ fun Routing.configureUploadRouting() {
                 )
             }
         when (result) {
-            is Success -> call.respondFile(baseDir = result.value.parentFile, fileName = result.value.name)
-                .also { result.value.delete() }
+            is Success -> call.respondFile(
+                baseDir = result.value.parent.toFile(),
+                fileName = result.value.fileName.name
+            )
+                .also { Files.delete(result.value) }
 
             is Failure -> handleFailureResponse(call, result)
         }

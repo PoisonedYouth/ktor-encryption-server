@@ -24,6 +24,7 @@ import io.ktor.http.parametersOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.file.Path
 
 interface FileHandler {
     suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
@@ -33,7 +34,7 @@ interface FileHandler {
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>>
 
-    suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File>
+    suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<Path>
     suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
 }
 
@@ -51,7 +52,7 @@ class FileHandlerImpl(
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
         return try {
-            val existingUser = userRepository.findByUsername(username)
+            val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '$username' does not exist.")
                 throw ApplicationServiceException(USER_NOT_FOUND, "User with username '$username' does not exist.")
@@ -118,7 +119,7 @@ class FileHandlerImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<File> {
+    override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<Path> {
         return try {
             Success(fileEncryptionService.decryptFile(downloadFileDto).also {
                 uploadFileHistoryService.addUploadFileHistoryEntry(
@@ -138,7 +139,7 @@ class FileHandlerImpl(
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>> {
         return try {
-            Success(uploadFileRepository.findAllByUsername(username).map {
+            Success(uploadFileRepository.findAllBy(username).map {
                 it.toUploadFileOverviewDto()
             })
         } catch (e: GeneralException) {

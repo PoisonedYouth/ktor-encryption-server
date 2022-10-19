@@ -25,7 +25,7 @@ class UploadFileExpirationTask(
                 logger.info("No upload files to delete.")
             }
         } catch (e: PersistenceException) {
-            logger.error("Failed to delete expired files. Will be skipped...")
+            logger.error("Failed to delete expired files. Will be skipped...", e)
         }
         logger.info("Finish detecting expired upload files.")
     }

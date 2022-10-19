@@ -1,10 +1,15 @@
 package com.poisonedyouth.configuration
 
 import io.ktor.server.application.Application
+import java.nio.file.Files
+import java.nio.file.Path
 
 object ApplicationConfiguration {
     lateinit var databaseConfig: DatabaseConfig
     lateinit var securityConfig: SecurityConfig
+    lateinit var uploadSettings: UploadSettings
+
+    fun getUploadDirectory(): Path = Path.of(uploadSettings.directoryPath)
 }
 
 fun Application.setupApplicationConfiguration() {
@@ -40,6 +45,21 @@ fun Application.setupApplicationConfiguration() {
         defaultIterationCount = defaultIterationCount,
         defaultGcmParameterSpecLength = defaultGcmParameterSpecLength
     )
+
+    // Upload Settings
+    val uploadSettings = environment.config.config("ktor.uploadSettings")
+    val directoryPath = uploadSettings.property("directoryPath").getString()
+    ApplicationConfiguration.uploadSettings = UploadSettings(
+        directoryPath = directoryPath
+    )
+    createUploadDirectory(directoryPath)
+}
+
+private fun createUploadDirectory(directoryPath: String) {
+    val path = Path.of(directoryPath)
+    if (Files.notExists(path)) {
+        Files.createDirectory(path)
+    }
 }
 
 data class DatabaseConfig(
@@ -57,4 +77,8 @@ data class SecurityConfig(
     val defaultSaltLengthBytes: Int,
     val defaultIterationCount: Int,
     val defaultGcmParameterSpecLength: Int
+)
+
+data class UploadSettings(
+    val directoryPath: String
 )

@@ -10,10 +10,12 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import kotlin.io.path.inputStream
+import kotlin.io.path.outputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.io.InputStream
+import java.nio.file.Path
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.spec.KeySpec
@@ -88,9 +90,9 @@ object EncryptionManager {
         password: String,
         encryptionResult: FileEncryptionResult,
         settings: SecuritySettings,
-        encryptedFile: File,
-        outputFile: File
-    ): File {
+        encryptedFile: Path,
+        outputFile: Path
+    ): Path {
         try {
             val key: SecretKey = generateSecretKey(
                 password = password,
@@ -125,12 +127,12 @@ object EncryptionManager {
             return outputFile
         } catch (e: Exception) {
             logger.error("Failed to decrypt file '$encryptedFile'.", e)
-            throw EncryptionException("Failed to decrypt file '$encryptedFile'.", e)
+            throw EncryptionException("Failed to decrypt file '$encryptedFile'.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    fun encryptSteam(inputStream: InputStream, file: File): Pair<String, FileEncryptionResult> {
+    fun encryptSteam(inputStream: InputStream, path: Path): Pair<String, FileEncryptionResult> {
         try {
             val password = PasswordManager.createRandomPassword()
             val salt = generateSalt()
@@ -149,7 +151,7 @@ object EncryptionManager {
 
             val digest = getMessageDigest()
 
-            CipherOutputStream(file.outputStream(), cipher).use { encryptedOutputStream ->
+            CipherOutputStream(path.outputStream(), cipher).use { encryptedOutputStream ->
                 val buffer = ByteArray(cipher.blockSize)
                 var nread: Int
                 while (inputStream.read(buffer).also { nread = it } > 0) {
@@ -169,7 +171,7 @@ object EncryptionManager {
             )
         } catch (e: Exception) {
             logger.error("Failed to encrypt stream.", e)
-            throw EncryptionException("Failed to encrypt stream.", e)
+            throw EncryptionException("Failed to encrypt stream.")
         }
     }
 
@@ -203,7 +205,7 @@ object EncryptionManager {
             )
         } catch (e: Exception) {
             logger.error("Failed to encrypt password.", e)
-            throw EncryptionException("Failed to encrypt password.", e)
+            throw EncryptionException("Failed to encrypt password.")
         }
     }
 
@@ -251,7 +253,7 @@ object EncryptionManager {
             return decryptedPassword.decodeToString()
         } catch (e: Exception) {
             logger.error("Failed to decrypt string.", e)
-            throw EncryptionException("Failed to decrypt string.", e)
+            throw EncryptionException("Failed to decrypt string.")
         }
     }
 
