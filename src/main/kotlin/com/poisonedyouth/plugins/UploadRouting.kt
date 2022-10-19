@@ -5,7 +5,7 @@ import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.FileHandler
 import com.poisonedyouth.application.UploadFileHistoryService
-import com.poisonedyouth.application.deleteDirectoryStream
+import com.poisonedyouth.application.deleteDirectoryRecursively
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
@@ -23,7 +23,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlin.io.path.name
 import org.koin.ktor.ext.inject
-import java.nio.file.Files
 
 const val ENCRYPTED_FILENAME_QUERY_PARAM = "encryptedfilename"
 
@@ -100,7 +99,7 @@ fun Routing.configureUploadRouting() {
                 baseDir = result.value.parent.toFile(),
                 fileName = result.value.fileName.name
             )
-                .also {deleteDirectoryStream(result.value.parent) }
+                .also {deleteDirectoryRecursively(result.value.parent) }
 
             is Failure -> handleFailureResponse(call, result)
         }

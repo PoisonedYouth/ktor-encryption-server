@@ -1,6 +1,6 @@
 package com.poisonedyouth
 
-import com.poisonedyouth.application.deleteDirectoryStream
+import com.poisonedyouth.application.deleteDirectoryRecursively
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.engine.applicationEngineEnvironment
@@ -19,13 +19,12 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 
 class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
     companion object {
         private lateinit var server: NettyApplicationEngine
 
-        val basePath: Path = Paths.get("temp")
+        val basePath: Path = Files.createTempDirectory("ktor-encryption-server")
     }
 
     override fun beforeAll(context: ExtensionContext?) {
@@ -41,7 +40,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
     }
 
     override fun beforeEach(context: ExtensionContext?) {
-        deleteDirectoryStream(basePath)
+        deleteDirectoryRecursively(basePath)
         Files.createDirectory(basePath)
         mockkObject(ApplicationConfiguration)
         every {
@@ -50,7 +49,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
     }
 
     override fun afterEach(context: ExtensionContext?) {
-        deleteDirectoryStream(basePath)
+        deleteDirectoryRecursively(basePath)
         unmockkObject(ApplicationConfiguration)
 
     }

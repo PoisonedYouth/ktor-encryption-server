@@ -69,7 +69,7 @@ class FileEncryptionServiceImpl(
                 )
             } catch (e: EncryptionException) {
                 withContext(Dispatchers.IO) {
-                    deleteDirectoryStream(outputFile.parent)
+                    deleteDirectoryRecursively(outputFile.parent)
                 }
                 throw e
             }
