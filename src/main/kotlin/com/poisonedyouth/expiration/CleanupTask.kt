@@ -29,7 +29,7 @@ class CleanupTask(
                         Files.delete(it)
                     }
                 } catch (e: PersistenceException) {
-                    logger.error("Failed to find file with name '$it.name'. Will be skipped...")
+                    logger.error("Failed to find file with name '$it.name'. Will be skipped...", e)
                 }
             }
         }
