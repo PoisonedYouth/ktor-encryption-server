@@ -217,7 +217,7 @@ internal class UserRepositoryTest : KoinTest {
         userRepository.save(user)
 
         // when
-        val actual = userRepository.findByUsername(user.username)
+        val actual = userRepository.findBy(user.username)
 
         // then
         assertThat(actual).isNotNull
@@ -242,7 +242,7 @@ internal class UserRepositoryTest : KoinTest {
         userRepository.save(user)
 
         // when
-        val actual = userRepository.findByUsername("non existing user")
+        val actual = userRepository.findBy("non existing user")
 
         // then
         assertThat(actual).isNull()
@@ -273,7 +273,7 @@ internal class UserRepositoryTest : KoinTest {
 
         // when + then
         assertThatThrownBy {
-            userRepository.findByUsername(user.username)
+            userRepository.findBy(user.username)
         }.isInstanceOf(PersistenceException::class.java)
 
         unmockkObject(UserEntity)

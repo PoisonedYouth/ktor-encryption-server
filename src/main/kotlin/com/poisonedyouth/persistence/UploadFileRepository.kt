@@ -4,7 +4,6 @@ import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.domain.SecuritySettings
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.security.FileEncryptionResult
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -66,7 +65,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun deleteExpiredFiles(): List<String> = transaction {
         try {
-            val result = UploadFileEntity.all().filter {
+            val result = UploadFileEntity.getAll().filter {
                 it.created.plusDays(it.user.userSettings.uploadFileExpirationDays) < LocalDateTime.now()
             }
             val fileNames = result.map { it.encryptedFilename }
@@ -96,7 +95,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     override fun deleteBy(username: String, encryptedFilename: String): Boolean = transaction {
         try {
             val userEntity = UserEntity.findUserOrThrow(username)
-            val uploadFile = findUploadFile(encryptedFilename, userEntity)
+            val uploadFile = UploadFileEntity.findByEncryptedFilenameAndUser(encryptedFilename, userEntity.id.value)
             if (uploadFile != null) {
                 uploadFile.delete()
                 Files.delete(ApplicationConfiguration.getUploadDirectory().resolve(encryptedFilename))
@@ -127,19 +126,6 @@ class UploadFileRepositoryImpl : UploadFileRepository {
                 "Failed to delete all upload files of user with username '$username' from database."
             )
         }
-    }
-
-    private fun findUploadFile(
-        encryptedFilename: String,
-        userEntity: UserEntity
-    ): UploadFileEntity? {
-        val uploadFile =
-            UploadFileEntity.find {
-                (UploadFileTable.encryptedFilename eq encryptedFilename)
-                    .and(UploadFileTable.user eq userEntity.id)
-            }
-                .firstOrNull()
-        return uploadFile
     }
 }
 
