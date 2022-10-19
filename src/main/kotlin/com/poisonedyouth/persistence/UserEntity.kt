@@ -21,7 +21,7 @@ class UserEntity(id: EntityID<Long>) : LongEntity(id) {
     var securitySettings by SecuritySettingsEntity referencedOn UserTable.securitySettings
 
     companion object : LongEntityClass<UserEntity>(UserTable) {
-        fun findUserOrThrow(username: String): UserEntity {
+        fun getUserOrThrow(username: String): UserEntity {
             return UserEntity.find { UserTable.username eq username }.firstOrNull()
                 ?: error("No user available for username '$username'.")
         }

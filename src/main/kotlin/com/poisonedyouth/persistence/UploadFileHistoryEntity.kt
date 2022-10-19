@@ -12,7 +12,18 @@ class UploadFileHistoryEntity(id: EntityID<Long>) : LongEntity(id) {
     var action by UploadFileHistoryTable.action
     var uploadFile by UploadFileEntity referencedOn UploadFileHistoryTable.uploadFile
 
-    companion object : LongEntityClass<UploadFileHistoryEntity>(UploadFileHistoryTable)
+    companion object : LongEntityClass<UploadFileHistoryEntity>(UploadFileHistoryTable) {
+        fun findByUploadFile(encryptedFilename: String) =
+            UploadFileHistoryEntity.find {
+                UploadFileHistoryTable.uploadFile eq UploadFileEntity.getUploadFileOrThrow(
+                    encryptedFilename
+                ).id
+            }
+
+        fun findAllByUploadFiles(uploadFileIds: List<Long>) = UploadFileHistoryEntity.find {
+            UploadFileHistoryTable.uploadFile inList uploadFileIds
+        }
+    }
 }
 
 

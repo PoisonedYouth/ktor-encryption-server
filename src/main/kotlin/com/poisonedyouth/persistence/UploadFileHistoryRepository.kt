@@ -27,8 +27,8 @@ class UploadFileHistoryRepositoryImpl : UploadFileHistoryRepository {
                 created = currentDateTime
                 action = uploadFileHistory.action.name
                 uploadFile =
-                    UploadFileEntity.find { UploadFileTable.encryptedFilename eq uploadFileHistory.uploadFile.encryptedFilename }
-                        .first()
+                    UploadFileEntity.findByEncryptedFilename(uploadFileHistory.uploadFile.encryptedFilename)
+                        ?: error("Upload file not found.")
             }
             uploadFileHistory.copy(
                 created = currentDateTime,
@@ -42,9 +42,9 @@ class UploadFileHistoryRepositoryImpl : UploadFileHistoryRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findAllBy(existingUser: User): List<UploadFileHistory> = transaction {
         try {
-            val userEntity = UserEntity.findUserOrThrow(existingUser.username)
-            val uploadFiles = UploadFileEntity.find { UploadFileTable.user eq userEntity.id }
-            UploadFileHistoryEntity.find { UploadFileHistoryTable.uploadFile inList uploadFiles.map { it.id } }.map {
+            val userEntity = UserEntity.getUserOrThrow(existingUser.username)
+            val uploadFiles = UploadFileEntity.findAllByUsername(userEntity.id.value)
+            UploadFileHistoryEntity.findAllByUploadFiles(uploadFiles.map { it.id.value }).map {
                 it.toUploadFileHistory()
             }
         } catch (e: Exception) {

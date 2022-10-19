@@ -51,7 +51,7 @@ internal class UserRepositoryTest : KoinTest {
         // then
         assertThat(actual).isNotNull
         transaction {
-            val userEntity = UserEntity.findUserOrThrow(user.username)
+            val userEntity = UserEntity.getUserOrThrow(user.username)
             userEntity.run {
                 assertThat(this.username).isEqualTo(user.username)
                 assertThat(this.iv).isEqualTo(user.encryptionResult.initializationVector)
@@ -135,7 +135,7 @@ internal class UserRepositoryTest : KoinTest {
         // then
         assertThat(actual).isNotNull
         transaction {
-            val userEntity = UserEntity.findUserOrThrow(updatedUser.username)
+            val userEntity = UserEntity.getUserOrThrow(updatedUser.username)
             userEntity.run {
                 assertThat(this.username).isEqualTo(updatedUser.username)
                 assertThat(this.iv).isEqualTo(updatedUser.encryptionResult.initializationVector)

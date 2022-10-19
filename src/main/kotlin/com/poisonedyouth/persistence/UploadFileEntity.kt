@@ -24,6 +24,10 @@ class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
             return UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.firstOrNull()
         }
 
+        fun getUploadFileOrThrow(encryptedFilename: String): UploadFileEntity {
+            return UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.first()
+        }
+
         fun findAllByUsername(userId: Long): SizedIterable<UploadFileEntity> {
             return UploadFileEntity.find { UploadFileTable.user eq userId }
         }

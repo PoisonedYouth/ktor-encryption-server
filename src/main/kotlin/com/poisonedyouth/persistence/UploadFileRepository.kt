@@ -83,7 +83,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findAllBy(username: String): List<UploadFile> = transaction {
         try {
-            val userEntity = UserEntity.findUserOrThrow(username)
+            val userEntity = UserEntity.getUserOrThrow(username)
             UploadFileEntity.findAllByUsername(userEntity.id.value).map { it.toUploadFile() }
         } catch (e: Exception) {
             logger.error("Failed to find all upload files by username '$username' in database.", e)
@@ -94,7 +94,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun deleteBy(username: String, encryptedFilename: String): Boolean = transaction {
         try {
-            val userEntity = UserEntity.findUserOrThrow(username)
+            val userEntity = UserEntity.getUserOrThrow(username)
             val uploadFile = UploadFileEntity.findByEncryptedFilenameAndUser(encryptedFilename, userEntity.id.value)
             if (uploadFile != null) {
                 uploadFile.delete()
@@ -112,7 +112,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun deleteAllBy(username: String): List<String> = transaction {
         try {
-            val userEntity = UserEntity.findUserOrThrow(username)
+            val userEntity = UserEntity.getUserOrThrow(username)
             val result = UploadFileEntity.findAllByUsername(userEntity.id.value)
             val fileNames = result.map { it.encryptedFilename }
             result.forEach {
