@@ -1,6 +1,6 @@
 package com.poisonedyouth.persistence
 
-import com.poisonedyouth.application.UPLOAD_DIRECTORY
+import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.domain.SecuritySettings
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.security.FileEncryptionResult
@@ -8,14 +8,14 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
+import java.nio.file.Files
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit.SECONDS
 
 interface UploadFileRepository {
     fun save(uploadFile: UploadFile): UploadFile
     fun findBy(encryptedFilename: String): UploadFile?
-    fun findAllByUsername(username: String): List<UploadFile>
+    fun findAllBy(username: String): List<UploadFile>
     fun deleteExpiredFiles(): List<String>
     fun deleteBy(username: String, encryptedFilename: String): Boolean
     fun deleteAllBy(username: String): List<String>
@@ -48,18 +48,18 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             )
         } catch (e: Exception) {
             logger.error("Failed to save upload file '$uploadFile' to database.", e)
-            throw PersistenceException("Failed to save upload file '$uploadFile' to database.", e)
+            throw PersistenceException("Failed to save upload file '$uploadFile' to database.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override fun findBy(encryptedFilename: String): UploadFile? = transaction {
         try {
-            UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.firstOrNull()
+            UploadFileEntity.findByEncryptedFilename(encryptedFilename)
                 ?.toUploadFile()
         } catch (e: Exception) {
             logger.error("Failed to find upload file with name '$encryptedFilename' in database.", e)
-            throw PersistenceException("Failed to find upload file with name '$encryptedFilename' in database.", e)
+            throw PersistenceException("Failed to find upload file with name '$encryptedFilename' in database.")
         }
     }
 
@@ -72,23 +72,23 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             val fileNames = result.map { it.encryptedFilename }
             result.forEach {
                 it.delete()
-                File("$UPLOAD_DIRECTORY/${it.encryptedFilename}").delete()
+                Files.delete(ApplicationConfiguration.getUploadDirectory().resolve(it.encryptedFilename))
             }
             fileNames
         } catch (e: Exception) {
             logger.error("Failed to delete expired files from database.", e)
-            throw PersistenceException("Failed to delete expired files from database.", e)
+            throw PersistenceException("Failed to delete expired files from database.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override fun findAllByUsername(username: String): List<UploadFile> = transaction {
+    override fun findAllBy(username: String): List<UploadFile> = transaction {
         try {
             val userEntity = UserEntity.findUserOrThrow(username)
-            UploadFileEntity.find { UploadFileTable.user eq userEntity.id }.map { it.toUploadFile() }
+            UploadFileEntity.findAllByUsername(userEntity.id.value).map { it.toUploadFile() }
         } catch (e: Exception) {
             logger.error("Failed to find all upload files by username '$username' in database.", e)
-            throw PersistenceException("Failed to find all upload files by username '$username' in database.", e)
+            throw PersistenceException("Failed to find all upload files by username '$username' in database.")
         }
     }
 
@@ -99,14 +99,14 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             val uploadFile = findUploadFile(encryptedFilename, userEntity)
             if (uploadFile != null) {
                 uploadFile.delete()
-                File("$UPLOAD_DIRECTORY/${encryptedFilename}").delete()
+                Files.delete(ApplicationConfiguration.getUploadDirectory().resolve(encryptedFilename))
                 true
             } else {
                 false
             }
         } catch (e: Exception) {
             logger.error("Failed to delete upload file with name '$encryptedFilename' from database.", e)
-            throw PersistenceException("Failed to delete upload file with name '$encryptedFilename' from database.", e)
+            throw PersistenceException("Failed to delete upload file with name '$encryptedFilename' from database.")
         }
     }
 
@@ -118,14 +118,13 @@ class UploadFileRepositoryImpl : UploadFileRepository {
             val fileNames = result.map { it.encryptedFilename }
             result.forEach {
                 it.delete()
-                File("$UPLOAD_DIRECTORY/${it.encryptedFilename}").delete()
+                Files.delete(ApplicationConfiguration.getUploadDirectory().resolve(it.encryptedFilename))
             }
             fileNames
         } catch (e: Exception) {
             logger.error("Failed to delete all upload files of user with username '$username' from database.", e)
             throw PersistenceException(
-                "Failed to delete all upload files of user with username '$username' from database.",
-                e
+                "Failed to delete all upload files of user with username '$username' from database."
             )
         }
     }

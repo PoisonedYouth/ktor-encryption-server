@@ -18,8 +18,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
-const val DOWNLOAD_DIRECTORY = "./downloads"
-
 interface FileEncryptionService {
     suspend fun encryptFiles(multipart: MultiPartData): List<Pair<String, UploadFile>>
     suspend fun decryptFile(downloadFileDto: DownloadFileDto): Path
@@ -58,7 +56,9 @@ class FileEncryptionServiceImpl(
     override suspend fun decryptFile(downloadFileDto: DownloadFileDto): Path {
         val uploadFile = uploadFileRepository.findBy(downloadFileDto.filename)
         if (uploadFile != null) {
-            val outputFile = Path.of("$DOWNLOAD_DIRECTORY/${uploadFile.filename}")
+            val outputFile = withContext(Dispatchers.IO) {
+                Files.createTempDirectory(UUID.randomUUID().toString())
+            }.resolve(uploadFile.filename)
             return try {
                 EncryptionManager.decryptStream(
                     downloadFileDto.password,
@@ -69,7 +69,7 @@ class FileEncryptionServiceImpl(
                 )
             } catch (e: EncryptionException) {
                 withContext(Dispatchers.IO) {
-                    Files.delete(outputFile)
+                    deleteDirectoryStream(outputFile.parent)
                 }
                 throw e
             }

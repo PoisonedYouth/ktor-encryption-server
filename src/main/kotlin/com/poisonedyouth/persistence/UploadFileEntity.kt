@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.javatime.datetime
 
 class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
@@ -20,6 +21,9 @@ class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<UploadFileEntity>(UploadFileTable) {
         fun findByEncryptedFilename(encryptedFilename: String): UploadFileEntity? {
             return UploadFileEntity.find { UploadFileTable.encryptedFilename eq encryptedFilename }.firstOrNull()
+        }
+        fun findAllByUsername(userId: Long): SizedIterable<UploadFileEntity> {
+            return UploadFileEntity.find { UploadFileTable.user eq userId }
         }
     }
 }

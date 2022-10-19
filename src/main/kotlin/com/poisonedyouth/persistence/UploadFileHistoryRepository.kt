@@ -35,21 +35,21 @@ class UploadFileHistoryRepositoryImpl : UploadFileHistoryRepository {
             )
         } catch (e: Exception) {
             logger.error("Failed to save upload file history '$uploadFileHistory' to database.", e)
-            throw PersistenceException("Failed to save upload file history '$uploadFileHistory' to database.", e)
+            throw PersistenceException("Failed to save upload file history '$uploadFileHistory' to database.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override fun findAllBy(user: User): List<UploadFileHistory> = transaction {
+    override fun findAllBy(existingUser: User): List<UploadFileHistory> = transaction {
         try {
-            val userEntity = UserEntity.findUserOrThrow(user.username)
+            val userEntity = UserEntity.findUserOrThrow(existingUser.username)
             val uploadFiles = UploadFileEntity.find { UploadFileTable.user eq userEntity.id }
             UploadFileHistoryEntity.find { UploadFileHistoryTable.uploadFile inList uploadFiles.map { it.id } }.map {
                 it.toUploadFileHistory()
             }
         } catch (e: Exception) {
-            logger.error("Failed to find upload file history for user '$user' from database.", e)
-            throw PersistenceException("Failed to find upload file history for user '$user' from database.", e)
+            logger.error("Failed to find upload file history for user '$existingUser' from database.", e)
+            throw PersistenceException("Failed to find upload file history for user '$existingUser' from database.")
         }
     }
 }

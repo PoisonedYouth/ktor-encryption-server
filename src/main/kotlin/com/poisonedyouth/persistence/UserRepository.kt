@@ -14,7 +14,7 @@ interface UserRepository {
 
     fun delete(username: String)
 
-    fun findByUsername(username: String): User?
+    fun findBy(username: String): User?
 
     fun findAll(): List<User>
 }
@@ -67,7 +67,7 @@ class UserRepositoryImpl : UserRepository {
             }
         } catch (e: Exception) {
             logger.error("Failed to save user '$user' to database.", e)
-            throw PersistenceException("Failed to save user '$user' to database.", e)
+            throw PersistenceException("Failed to save user '$user' to database.")
         }
     }
 
@@ -83,17 +83,17 @@ class UserRepositoryImpl : UserRepository {
             }
         } catch (e: Exception) {
             logger.error("Failed to delete user with username '$username' from database.", e)
-            throw PersistenceException("Failed to delete user with username '$username' from database.", e)
+            throw PersistenceException("Failed to delete user with username '$username' from database.")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override fun findByUsername(username: String): User? = transaction {
+    override fun findBy(username: String): User? = transaction {
         try {
             UserEntity.findUserOrNull(username)?.toUser()
         } catch (e: Exception) {
             logger.error("Failed to find with username '$username' in database.", e)
-            throw PersistenceException("Failed to find with username '$username' in database.", e)
+            throw PersistenceException("Failed to find with username '$username' in database.")
         }
     }
 
@@ -103,7 +103,7 @@ class UserRepositoryImpl : UserRepository {
             UserEntity.findAll().map { it.toUser() }
         } catch (e: Exception) {
             logger.error("Failed to find all user in database.", e)
-            throw PersistenceException("Failed to find all user in database.", e)
+            throw PersistenceException("Failed to find all user in database.")
         }
     }
 }

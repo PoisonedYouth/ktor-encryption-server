@@ -67,7 +67,7 @@ class UploadFileHistoryServiceImpl(
 
     override fun getUploadFileHistory(username: String): ApiResult<List<UploadFileHistoryDto>> {
         return try {
-            val existingUser = userRepository.findByUsername(username)
+            val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '${username}' does not exist.")
                 throw ApplicationServiceException(USER_NOT_FOUND, "User with username '${username}' does not exist.")

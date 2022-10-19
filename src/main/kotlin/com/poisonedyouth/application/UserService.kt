@@ -34,7 +34,7 @@ class UserServiceImpl(
     private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
     override fun save(userDto: UserDto): ApiResult<String> {
         try {
-            if (userRepository.findByUsername(userDto.username) != null) {
+            if (userRepository.findBy(userDto.username) != null) {
                 throw ApplicationServiceException(
                     USER_ALREADY_EXIST,
                     "User with username '${userDto.username}' already exist."
@@ -67,7 +67,7 @@ class UserServiceImpl(
 
     override fun authenticate(userDto: UserDto): ApiResult<Unit> {
         return try {
-            val existingUser = userRepository.findByUsername(userDto.username)
+            val existingUser = userRepository.findBy(userDto.username)
             if (existingUser == null) {
                 logger.error("User with username '${userDto.username}' does not exist.")
                 throw ApplicationServiceException(
@@ -95,7 +95,7 @@ class UserServiceImpl(
 
     override fun delete(username: String): ApiResult<String> {
         return try {
-            val existingUser = userRepository.findByUsername(username)
+            val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '${username}' does not exist.")
                 throw ApplicationServiceException(USER_NOT_FOUND, "User with username '${username}' does not exist.")
@@ -110,7 +110,7 @@ class UserServiceImpl(
 
     override fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String> {
         return try {
-            val existingUser = userRepository.findByUsername(username)
+            val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '${username}' does not exist.")
                 throw ApplicationServiceException(USER_NOT_FOUND, "User with username '${username}' does not exist.")
@@ -137,7 +137,7 @@ class UserServiceImpl(
 
     override fun updateSettings(username: String, userSettingsDto: UserSettingsDto): ApiResult<String> {
         return try {
-            val existingUser = userRepository.findByUsername(username)
+            val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '${username}' does not exist.")
                 throw ApplicationServiceException(USER_NOT_FOUND, "User with username '${username}' does not exist.")

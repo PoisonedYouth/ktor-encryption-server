@@ -5,6 +5,7 @@ import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.FileHandler
 import com.poisonedyouth.application.UploadFileHistoryService
+import com.poisonedyouth.application.deleteDirectoryStream
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
@@ -99,7 +100,7 @@ fun Routing.configureUploadRouting() {
                 baseDir = result.value.parent.toFile(),
                 fileName = result.value.fileName.name
             )
-                .also { Files.delete(result.value) }
+                .also {deleteDirectoryStream(result.value.parent) }
 
             is Failure -> handleFailureResponse(call, result)
         }
