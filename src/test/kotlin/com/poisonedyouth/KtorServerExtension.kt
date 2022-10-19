@@ -25,7 +25,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
     companion object {
         private lateinit var server: NettyApplicationEngine
 
-        val basePath: Path = Paths.get(UUID.randomUUID().toString())
+        val basePath: Path = Paths.get("temp")
     }
 
     override fun beforeAll(context: ExtensionContext?) {
@@ -41,6 +41,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
     }
 
     override fun beforeEach(context: ExtensionContext?) {
+        deleteDirectoryStream(basePath)
         Files.createDirectory(basePath)
         mockkObject(ApplicationConfiguration)
         every {

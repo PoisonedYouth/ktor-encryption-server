@@ -5,7 +5,9 @@ import java.nio.file.Path
 
 
 fun deleteDirectoryStream(path: Path) {
-    Files.walk(path)
-        .sorted(Comparator.reverseOrder())
-        .forEach { Files.delete(it) }
+    if (Files.exists(path)) {
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .forEach { Files.delete(it) }
+    }
 }
