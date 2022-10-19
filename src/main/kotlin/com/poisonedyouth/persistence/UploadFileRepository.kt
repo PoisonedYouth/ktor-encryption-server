@@ -113,7 +113,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
     override fun deleteAllBy(username: String): List<String> = transaction {
         try {
             val userEntity = UserEntity.findUserOrThrow(username)
-            val result = UploadFileEntity.find { UploadFileTable.user eq userEntity.id }
+            val result = UploadFileEntity.findAllByUsername(userEntity.id.value)
             val fileNames = result.map { it.encryptedFilename }
             result.forEach {
                 it.delete()

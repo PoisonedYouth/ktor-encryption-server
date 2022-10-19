@@ -827,6 +827,177 @@ internal class UploadFileRepositoryTest : KoinTest {
                 .map { it.fileName.name }).doesNotContain(uploadFile.encryptedFilename)
     }
 
+    @Test
+    fun `deleteAllBy removes matching upload files`() {
+        // given
+        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+
+        val owner = persistUser("poisonedyouth")
+        val uploadFile = UploadFile(
+            filename = "secret.txt",
+            encryptedFilename = "encrypted",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(uploadFile)
+        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        val otherUploadFile = UploadFile(
+            filename = "otherFile.txt",
+            encryptedFilename = "encrypted2",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(otherUploadFile)
+        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+
+        // when
+        val actual = uploadFileRepository.deleteAllBy(owner.username)
+
+        // then
+        assertThat(actual).hasSize(2)
+        assertThat(transaction { UploadFileEntity.all().count() }).isZero
+        assertThat(
+            ApplicationConfiguration.getUploadDirectory().listDirectoryEntries().map { it.fileName.name }
+        ).doesNotContain(uploadFile.encryptedFilename, otherUploadFile.encryptedFilename)
+    }
+
+    @Test
+    fun `deleteAllBy throws PersistenceException if user does not exist`() {
+        // given
+        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+
+        val owner = persistUser("poisonedyouth")
+        val uploadFile = UploadFile(
+            filename = "secret.txt",
+            encryptedFilename = "encrypted",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(uploadFile)
+        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        val otherUploadFile = UploadFile(
+            filename = "otherFile.txt",
+            encryptedFilename = "encrypted2",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(otherUploadFile)
+        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+
+        // when
+        assertThatThrownBy {
+            uploadFileRepository.deleteAllBy("not existing user")
+        }.isInstanceOf(PersistenceException::class.java)
+    }
+
+    @Test
+    fun `deleteAllBy throws PersistenceException if deletion fails`() {
+        // given
+        mockkObject(UploadFileEntity)
+        every {
+            UploadFileEntity.findAllByUsername(any())
+        } throws IllegalStateException("Failed")
+
+        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+
+        val owner = persistUser("poisonedyouth")
+        val uploadFile = UploadFile(
+            filename = "secret.txt",
+            encryptedFilename = "encrypted",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(uploadFile)
+        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        val otherUploadFile = UploadFile(
+            filename = "otherFile.txt",
+            encryptedFilename = "encrypted2",
+            encryptionResult = EncryptionManager.encryptSteam(
+                "FileContent".byteInputStream(),
+                tempFile
+            ).second,
+            owner = owner,
+            settings = SecuritySettings(
+                fileIntegrityCheckHashingAlgorithm = "SHA-512",
+                passwordKeySizeBytes = 64,
+                nonceLengthBytes = 32,
+                saltLengthBytes = 128,
+                iterationCount = 10000,
+                gcmParameterSpecLength = 128
+            ),
+            created = LocalDateTime.now().minusDays(10)
+        )
+        uploadFileRepository.save(otherUploadFile)
+        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+
+        // when
+        assertThatThrownBy {
+            uploadFileRepository.deleteAllBy(owner.username)
+        }.isInstanceOf(PersistenceException::class.java)
+
+        unmockkObject(UploadFileEntity)
+    }
+
 
     private fun persistUser(username: String): User {
         val user = User(
