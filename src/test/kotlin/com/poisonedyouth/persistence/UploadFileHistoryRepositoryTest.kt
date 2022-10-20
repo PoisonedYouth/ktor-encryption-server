@@ -35,7 +35,6 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
             UploadFileEntity.all().forEach { it.delete() }
             UserEntity.all().forEach { it.delete() }
         }
-
     }
 
     @Test

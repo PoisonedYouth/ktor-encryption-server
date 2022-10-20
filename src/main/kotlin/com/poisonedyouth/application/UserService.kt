@@ -61,7 +61,7 @@ class UserServiceImpl(
                 ).username
             )
         } catch (e: GeneralException) {
-            return ApiResult.Failure(PERSISTENCE_FAILURE, e.message)
+            return ApiResult.Failure(e.errorCode, e.message)
         }
     }
 
@@ -129,7 +129,7 @@ class UserServiceImpl(
                     encryptionResult = encryptionResult
                 )
             )
-            ApiResult.Success("Successfully updated password .")
+            ApiResult.Success("Successfully updated password.")
         } catch (e: GeneralException) {
             ApiResult.Failure(e.errorCode, e.message)
         }
