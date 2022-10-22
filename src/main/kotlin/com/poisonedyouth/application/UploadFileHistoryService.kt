@@ -31,6 +31,11 @@ class UploadFileHistoryServiceImpl(
         uploadFile: UploadFile
     ): ApiResult<Unit> {
         return try {
+            uploadFileRepository.findBy(uploadFile.encryptedFilename) ?: return ApiResult.Failure(
+                FILE_NOT_FOUND,
+                "Upload file with encrypted filename '${uploadFile.encryptedFilename}' not found."
+            )
+
             uploadFileHistoryRepository.save(
                 UploadFileHistory(
                     ipAddress = ipAddress,
