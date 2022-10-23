@@ -52,6 +52,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
     // h2
     implementation("com.h2database:h2:2.1.214")
@@ -73,6 +74,8 @@ dependencies {
     testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
     testImplementation("io.mockk:mockk-jvm:1.13.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+
 
 }
 

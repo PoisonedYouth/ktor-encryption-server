@@ -3,13 +3,14 @@ package com.poisonedyouth.configuration
 import io.ktor.server.application.Application
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 object ApplicationConfiguration {
     lateinit var databaseConfig: DatabaseConfig
     lateinit var securityConfig: SecurityConfig
     lateinit var uploadSettings: UploadSettings
 
-    fun getUploadDirectory(): Path = Path.of(uploadSettings.directoryPath)
+    fun getUploadDirectory(): Path = Paths.get(uploadSettings.directoryPath)
 }
 
 fun Application.setupApplicationConfiguration() {
@@ -56,7 +57,7 @@ fun Application.setupApplicationConfiguration() {
 }
 
 private fun createUploadDirectory(directoryPath: String) {
-    val path = Path.of(directoryPath)
+    val path = Paths.get(directoryPath)
     if (Files.notExists(path)) {
         Files.createDirectory(path)
     }
