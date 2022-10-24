@@ -119,5 +119,8 @@ For additional information see [Ktor Containerizing](https://ktor.io/docs/docker
 
 The next topics I will work on:
 - Make password settings configurable
+- Make upload size configurable
+- Move default expiration period to application.conf
+- Add OpenAPI specificatoin
 - Optimize serving download content (not storing decrypted version on server but directly streaming to consumer)
 - Add client for better usability
