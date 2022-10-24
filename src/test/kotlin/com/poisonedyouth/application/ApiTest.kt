@@ -3,7 +3,6 @@
 package com.poisonedyouth.application
 
 import com.poisonedyouth.KtorServerExtension
-import com.poisonedyouth.api.DownloadFileDto
 import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UploadFileHistoryDto
 import com.poisonedyouth.api.UploadFileOverviewDto
@@ -31,7 +30,6 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.readBytes
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -40,11 +38,13 @@ import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
-import io.ktor.utils.io.copyTo
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readBytes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
@@ -52,7 +52,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.koin.test.KoinTest
 import org.koin.test.inject
-import java.io.File
 import java.nio.file.Files
 import java.util.*
 
@@ -270,10 +269,16 @@ class ApiTest : KoinTest {
         }
 
         // then
-        val downloadFile = Files.createTempFile("download", "txt")
+        val downloadFile = withContext(Dispatchers.IO) {
+            Files.createTempFile("download", "txt")
+        }
         response.content.copyAndClose(downloadFile.toFile().writeChannel())
         assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-        assertThat(Files.readString(downloadFile)).isEqualTo("FileContent")
+        assertThat(withContext(Dispatchers.IO) {
+            Files.readString(downloadFile)
+        }).isEqualTo("FileContent")
+
+        downloadFile.deleteIfExists()
     }
 
     private fun persistUser(username: String, password: String): User {
