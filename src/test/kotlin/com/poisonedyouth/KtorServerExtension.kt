@@ -1,5 +1,6 @@
 package com.poisonedyouth
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.poisonedyouth.application.deleteDirectoryRecursively
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import io.ktor.client.HttpClient
@@ -67,7 +68,9 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
 fun createHttpClient(username: String = "username", password: String = "password"): HttpClient {
     val client = HttpClient {
         install(ContentNegotiation) {
-            jackson()
+            jackson{
+                registerModule(JavaTimeModule())
+            }
         }
         install(Auth) {
             basic {
