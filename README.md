@@ -46,17 +46,17 @@ There are following requirements (which are fix at the moment):
 - minimum one special character
 
 ## Database Configuration
-By default, an H2 file database is used for persistence. This can easily be replaced by other vendor. The configuration of the database is 
+By default, an H2 file database with encryption is used for persistence. This can easily be replaced by other vendor. The configuration of the database is 
 done in application settings ([application.conf](src/main/resources/application.conf))
 
 ```
- database {
+    database {
         driverClass = "org.h2.Driver"
-        url = "jdbc:h2:file:./db"
+        url = "jdbc:h2:file:./db;CIPHER=AES"
         user = "root"
-        password = "password"
+        password = "userPassword encryptionPassword"
         maxPoolSize = 10
-    }    
+    }   
 ```
 ## Upload configuration
 There are two settings available for customization:
