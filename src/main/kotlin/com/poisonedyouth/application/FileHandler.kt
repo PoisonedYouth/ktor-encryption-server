@@ -5,8 +5,11 @@ import com.poisonedyouth.api.UploadFileDto
 import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.application.ApiResult.*
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
+import com.poisonedyouth.application.ErrorCode.MISSING_HEADER
 import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
+import com.poisonedyouth.application.ErrorCode.UPLOAD_SIZE_LIMIT_EXCEEDED
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
+import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.domain.UploadAction.DOWNLOAD
 import com.poisonedyouth.domain.UploadAction.UPLOAD
 import com.poisonedyouth.domain.UploadFile
@@ -23,7 +26,6 @@ import io.ktor.http.content.MultiPartData
 import io.ktor.http.parametersOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.nio.file.Path
 
 interface FileHandler {
@@ -31,6 +33,7 @@ interface FileHandler {
     suspend fun upload(
         username: String,
         origin: RequestConnectionPoint,
+        contentLength: Long?,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>>
 
@@ -49,9 +52,25 @@ class FileHandlerImpl(
     override suspend fun upload(
         username: String,
         origin: RequestConnectionPoint,
+        contentLength: Long?,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
         return try {
+            if (contentLength == null) {
+                return Failure(
+                    MISSING_HEADER,
+                    "Required 'ContentLength' header is missing."
+                )
+            }
+            val contentLengthInMB = contentLength / 1000 / 1000
+            if (contentLengthInMB > ApplicationConfiguration.getUploadMaxSizeInMb()) {
+                logger.error("Upload ('$contentLengthInMB MB') exceeds configured upload limit of ('${ApplicationConfiguration.getUploadMaxSizeInMb()} MB')")
+                return Failure(
+                    UPLOAD_SIZE_LIMIT_EXCEEDED,
+                    "Upload ('$contentLengthInMB MB') exceeds configured upload limit of ('${ApplicationConfiguration.getUploadMaxSizeInMb()} MB')"
+                )
+            }
+
             val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
                 logger.error("User with username '$username' does not exist.")

@@ -6,12 +6,14 @@ import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.FileHandler
 import com.poisonedyouth.application.UploadFileHistoryService
 import com.poisonedyouth.application.deleteDirectoryRecursively
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.plugins.origin
+import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
@@ -32,7 +34,6 @@ fun Routing.configureUploadRouting() {
     val fileHandler by inject<FileHandler>()
     val uploadFileHistoryService by inject<UploadFileHistoryService>()
 
-
     authenticate("userAuthentication") {
         route("api/upload") {
             post("") {
@@ -40,6 +41,7 @@ fun Routing.configureUploadRouting() {
                     val result = fileHandler.upload(
                         username = username,
                         origin = call.request.origin,
+                        contentLength = call.request.header(HttpHeaders.ContentLength)?.toLong(),
                         multiPartData = call.receiveMultipart()
                     )
                     when (result) {
@@ -99,7 +101,7 @@ fun Routing.configureUploadRouting() {
                 baseDir = result.value.parent.toFile(),
                 fileName = result.value.fileName.name
             )
-                .also {deleteDirectoryRecursively(result.value.parent) }
+                .also { deleteDirectoryRecursively(result.value.parent) }
 
             is Failure -> handleFailureResponse(call, result)
         }

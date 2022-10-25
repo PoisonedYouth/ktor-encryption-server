@@ -105,6 +105,7 @@ internal class FileHandlerTest : KoinTest {
         val actual = fileHandler.upload(
             username = user.username,
             origin = createRequestConnectionPoint(),
+            contentLength = 10,
             multiPartData = multiPartData
         )
 
@@ -114,6 +115,48 @@ internal class FileHandlerTest : KoinTest {
         assertThat(actual.value.first().filename).isEqualTo("file1.txt")
         assertThat(actual.value.first().downloadLink).isNotBlank()
         assertThat(actual.value.first().deleteLink).isNotBlank()
+    }
+
+    @Test
+    fun `upload returns failure if uploaded files exceed limit`() = runTest {
+        // given
+        val user = persistUser("poisonedyouth")
+
+
+        val multiPartData = createMultipartData("file1.txt")
+
+        // when
+        val actual = fileHandler.upload(
+            username = user.username,
+            origin = createRequestConnectionPoint(),
+            contentLength = 500000000,
+            multiPartData = multiPartData
+        )
+
+        // then
+        assertThat(actual).isInstanceOf(Failure::class.java)
+        assertThat((actual as Failure).errorCode).isEqualTo(ErrorCode.UPLOAD_SIZE_LIMIT_EXCEEDED)
+    }
+
+    @Test
+    fun `upload returns failure if content length header is missing`() = runTest {
+        // given
+        val user = persistUser("poisonedyouth")
+
+
+        val multiPartData = createMultipartData("file1.txt")
+
+        // when
+        val actual = fileHandler.upload(
+            username = user.username,
+            origin = createRequestConnectionPoint(),
+            contentLength = null,
+            multiPartData = multiPartData
+        )
+
+        // then
+        assertThat(actual).isInstanceOf(Failure::class.java)
+        assertThat((actual as Failure).errorCode).isEqualTo(ErrorCode.MISSING_HEADER)
     }
 
     @Test
@@ -128,6 +171,7 @@ internal class FileHandlerTest : KoinTest {
         val actual = fileHandler.upload(
             username = user.username,
             origin = createRequestConnectionPoint(),
+            contentLength = 10,
             multiPartData = multiPartData
         )
 
@@ -150,6 +194,7 @@ internal class FileHandlerTest : KoinTest {
         val actual = fileHandler.upload(
             username = "not existing user",
             origin = createRequestConnectionPoint(),
+            contentLength = 10,
             multiPartData = multiPartData
         )
 
@@ -174,6 +219,7 @@ internal class FileHandlerTest : KoinTest {
         val actual = fileHandler.upload(
             username = user.username,
             origin = createRequestConnectionPoint(),
+            contentLength = 10,
             multiPartData = multiPartData
         )
 

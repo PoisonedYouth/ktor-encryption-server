@@ -13,6 +13,8 @@ object ApplicationConfiguration {
     fun getUploadDirectory(): Path = Paths.get(uploadSettings.directoryPath)
 
     fun getDefaultExpirationDays(): Long = uploadSettings.expirationDays
+
+    fun getUploadMaxSizeInMb(): Long = uploadSettings.uploadMaxSizeInMb
 }
 
 fun Application.setupApplicationConfiguration() {
@@ -53,9 +55,11 @@ fun Application.setupApplicationConfiguration() {
     val uploadSettings = environment.config.config("ktor.uploadSettings")
     val directoryPath = uploadSettings.property("directoryPath").getString()
     val expirationDays = uploadSettings.property("expirationDays").getString().toLong()
+    val uploadMaxSizeInMb = uploadSettings.property("uploadMaxSizeInMb").getString().toLong()
     ApplicationConfiguration.uploadSettings = UploadSettings(
         directoryPath = directoryPath,
-        expirationDays = expirationDays
+        expirationDays = expirationDays,
+        uploadMaxSizeInMb = uploadMaxSizeInMb
     )
     createUploadDirectory(directoryPath)
 }
@@ -87,4 +91,5 @@ data class SecurityConfig(
 data class UploadSettings(
     val directoryPath: String,
     val expirationDays: Long,
+    val uploadMaxSizeInMb: Long,
 )
