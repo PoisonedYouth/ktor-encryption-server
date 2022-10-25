@@ -1,5 +1,6 @@
 package com.poisonedyouth.security
 
+import com.poisonedyouth.configuration.ApplicationConfiguration
 import org.passay.CharacterRule
 import org.passay.EnglishCharacterData.Alphabetical
 import org.passay.EnglishCharacterData.Digit
@@ -11,23 +12,35 @@ import org.passay.PasswordData
 import org.passay.PasswordGenerator
 import org.passay.PasswordValidator
 
-
-const val MINIMUM_PASSWORD_LENGTH = 16
-
 object PasswordManager {
-    private val characterRules = listOf(
-        CharacterRule(Alphabetical),
-        CharacterRule(Digit),
-        CharacterRule(Special),
-        CharacterRule(UpperCase),
-        CharacterRule(LowerCase),
-    )
-    private val lengthRule = LengthRule(MINIMUM_PASSWORD_LENGTH)
+    private val characterRules = initCharacterRules()
+    private val lengthRule = initLengthRule()
+
     private val passwordGenerator = PasswordGenerator()
     private val passwordValidator = PasswordValidator(characterRules + lengthRule)
 
+    private fun initCharacterRules(): List<CharacterRule> {
+        val characterRules = mutableListOf(CharacterRule(Alphabetical))
+        if (ApplicationConfiguration.passwordSettings.mustContainDigits) {
+            characterRules.add(CharacterRule(Digit))
+        }
+        if (ApplicationConfiguration.passwordSettings.mustContainLowerCase) {
+            characterRules.add(CharacterRule(LowerCase))
+        }
+        if (ApplicationConfiguration.passwordSettings.mustContainUpperCase) {
+            characterRules.add(CharacterRule(UpperCase))
+        }
+        if (ApplicationConfiguration.passwordSettings.mustContainSpecial) {
+            characterRules.add(CharacterRule(Special))
+        }
+        return characterRules
+    }
+
+    private fun initLengthRule() = LengthRule(ApplicationConfiguration.passwordSettings.minimumLength)
+
+
     fun createRandomPassword(): String {
-        return passwordGenerator.generatePassword(MINIMUM_PASSWORD_LENGTH, characterRules)
+        return passwordGenerator.generatePassword(ApplicationConfiguration.passwordSettings.minimumLength, characterRules)
     }
 
     fun validatePassword(password: String): List<String> {

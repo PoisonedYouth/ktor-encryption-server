@@ -290,7 +290,7 @@ internal class UserServiceTest : KoinTest {
     @Test
     fun `updateSettings returns failure if user does not exist`() {
         // given
-        val user = persistUser("poisonedyouth")
+        persistUser("poisonedyouth")
 
         val userSettingsDto = UserSettingsDto(
             uploadFileExpirationDays = 122

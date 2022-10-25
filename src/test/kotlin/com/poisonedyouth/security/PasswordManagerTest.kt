@@ -1,10 +1,15 @@
 package com.poisonedyouth.security
 
+import com.poisonedyouth.KtorServerExtension
+import com.poisonedyouth.configuration.ApplicationConfiguration
+import io.ktor.server.config.ApplicationConfig
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.passay.EnglishCharacterData
 
 
+@ExtendWith(KtorServerExtension::class)
 internal class PasswordManagerTest {
 
     @Test
@@ -14,7 +19,7 @@ internal class PasswordManagerTest {
 
         // then
         password.run {
-            assertThat(this).hasSize(MINIMUM_PASSWORD_LENGTH)
+            assertThat(this).hasSize(ApplicationConfiguration.passwordSettings.minimumLength)
             assertThat(this).matches(".*[0-9]*.+")
             assertThat(this).matches(".*[A-Z]+.*")
             assertThat(this).matches(".*[a-z].*+")
