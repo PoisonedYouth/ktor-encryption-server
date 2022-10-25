@@ -9,6 +9,7 @@ object ApplicationConfiguration {
     lateinit var databaseConfig: DatabaseConfig
     lateinit var securityConfig: SecurityConfig
     lateinit var uploadSettings: UploadSettings
+    lateinit var passwordSettings: PasswordSettings
 
     fun getUploadDirectory(): Path = Paths.get(uploadSettings.directoryPath)
 
@@ -62,6 +63,21 @@ fun Application.setupApplicationConfiguration() {
         uploadMaxSizeInMb = uploadMaxSizeInMb
     )
     createUploadDirectory(directoryPath)
+
+    // Password Settings
+    val passwordSettings = environment.config.config("ktor.passwordSettings")
+    val minimumLength = passwordSettings.property("minimumLength").getString().toInt()
+    val mustContainUpperCase = passwordSettings.property("mustContainUpperCase").getString().toBoolean()
+    val mustContainLowerCase = passwordSettings.property("mustContainLowerCase").getString().toBoolean()
+    val mustContainDigits = passwordSettings.property("mustContainDigits").getString().toBoolean()
+    val mustContainSpecial = passwordSettings.property("mustContainSpecial").getString().toBoolean()
+    ApplicationConfiguration.passwordSettings = PasswordSettings(
+        minimumLength = minimumLength,
+        mustContainDigits = mustContainDigits,
+        mustContainUpperCase = mustContainUpperCase,
+        mustContainLowerCase = mustContainLowerCase,
+        mustContainSpecial = mustContainSpecial
+    )
 }
 
 private fun createUploadDirectory(directoryPath: String) {
@@ -92,4 +108,12 @@ data class UploadSettings(
     val directoryPath: String,
     val expirationDays: Long,
     val uploadMaxSizeInMb: Long,
+)
+
+data class PasswordSettings(
+    val minimumLength: Int,
+    val mustContainDigits: Boolean,
+    val mustContainUpperCase: Boolean,
+    val mustContainLowerCase: Boolean,
+    val mustContainSpecial: Boolean
 )
