@@ -58,6 +58,15 @@ done in application settings ([application.conf](src/main/resources/application.
         maxPoolSize = 10
     }    
 ```
+## Upload configuration
+There are two settings available for customization:
+```
+    uploadSettings{
+        directoryPath = "./uploads"
+        expirationDays = 6
+    }
+```
+The path for storing the upload files and the expiration days.
 
 ## Requests
 

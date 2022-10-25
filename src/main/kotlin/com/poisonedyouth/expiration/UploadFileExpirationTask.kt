@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-const val DEFAULT_EXPIRATION_DAYS: Long = 6
 
 class UploadFileExpirationTask(
     private val uploadFileRepository: UploadFileRepository

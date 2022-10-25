@@ -141,7 +141,7 @@ internal class FileHandlerTest : KoinTest {
     @Test
     fun `upload returns failure if user does not exist`() = runTest {
         // given
-        val user = persistUser("poisonedyouth")
+        persistUser("poisonedyouth")
 
 
         val multiPartData = createMultipartData("file1.txt")
@@ -261,7 +261,7 @@ internal class FileHandlerTest : KoinTest {
     @Test
     fun `delete returns failure if user does not exist`() = runTest {
         // given
-        val user = persistUser("poisonedyouth")
+        persistUser("poisonedyouth")
 
         // when
         val actual = fileHandler.delete("not existing user", "encrypted")

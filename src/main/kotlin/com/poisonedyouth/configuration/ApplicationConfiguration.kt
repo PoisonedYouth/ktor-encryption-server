@@ -11,10 +11,11 @@ object ApplicationConfiguration {
     lateinit var uploadSettings: UploadSettings
 
     fun getUploadDirectory(): Path = Paths.get(uploadSettings.directoryPath)
+
+    fun getDefaultExpirationDays(): Long = uploadSettings.expirationDays
 }
 
 fun Application.setupApplicationConfiguration() {
-
     // Database
     val databaseObject = environment.config.config("ktor.database")
     val driverClass = databaseObject.property("driverClass").getString()
@@ -32,7 +33,8 @@ fun Application.setupApplicationConfiguration() {
 
     // Security
     val securityObject = environment.config.config("ktor.security")
-    val fileIntegrityCheckHashingAlgorithm = securityObject.property("fileIntegrityCheckHashingAlgorithm").getString()
+    val fileIntegrityCheckHashingAlgorithm =
+        securityObject.property("fileIntegrityCheckHashingAlgorithm").getString()
     val defaultPasswordKeySize = securityObject.property("defaultPasswordKeySizeBytes").getString().toInt()
     val defaultNonceLength = securityObject.property("defaultNonceLengthBytes").getString().toInt()
     val defaultSaltLength = securityObject.property("defaultSaltLengthBytes").getString().toInt()
@@ -50,8 +52,10 @@ fun Application.setupApplicationConfiguration() {
     // Upload Settings
     val uploadSettings = environment.config.config("ktor.uploadSettings")
     val directoryPath = uploadSettings.property("directoryPath").getString()
+    val expirationDays = uploadSettings.property("expirationDays").getString().toLong()
     ApplicationConfiguration.uploadSettings = UploadSettings(
-        directoryPath = directoryPath
+        directoryPath = directoryPath,
+        expirationDays = expirationDays
     )
     createUploadDirectory(directoryPath)
 }
@@ -81,5 +85,6 @@ data class SecurityConfig(
 )
 
 data class UploadSettings(
-    val directoryPath: String
+    val directoryPath: String,
+    val expirationDays: Long,
 )

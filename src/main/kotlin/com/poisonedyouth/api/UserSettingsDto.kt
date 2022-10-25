@@ -1,7 +1,8 @@
 package com.poisonedyouth.api
 
-import com.poisonedyouth.expiration.DEFAULT_EXPIRATION_DAYS
+import com.poisonedyouth.configuration.ApplicationConfiguration
+
 
 data class UserSettingsDto(
-    val uploadFileExpirationDays: Long = DEFAULT_EXPIRATION_DAYS
+    val uploadFileExpirationDays: Long = ApplicationConfiguration.getDefaultExpirationDays()
 )
