@@ -9,6 +9,7 @@ plugins {
     application
     kotlin("jvm") version "1.7.10"
     id("io.ktor.plugin") version "2.1.1"
+    id("info.solidsoft.pitest") version "1.9.0"
 }
 
 group = "com.poisonedyouth"
@@ -29,6 +30,16 @@ ktor{
         localImageName.set("ktor-application-server")
         imageTag.set("0.0.1")
     }
+}
+
+configure<info.solidsoft.gradle.pitest.PitestPluginExtension> {
+    junit5PluginVersion.set("1.0.0")
+    avoidCallsTo.set(setOf("kotlin.jvm.internal"))
+    mutators.set(setOf("STRONGER"))
+    targetClasses.set(setOf("com.poisonedyouth.*"))  //by default "${project.group}.*"
+    targetTests.set(setOf("com.poisonedyouth.*Test"))
+    threads.set(Runtime.getRuntime().availableProcessors())
+    outputFormats.set(setOf("XML", "HTML"))
 }
 
 dependencies {
