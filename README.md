@@ -38,12 +38,24 @@ you can see the default values.
 
 ## Password Security
 The password security is active for user password and the random password for file upload.
-There are following requirements (which are fix at the moment):
+There are following requirements.
 - minimum 16 characters
 - minimum one uppercase character
 - minimum one lowercase character
 - minimum one digit
 - minimum one special character
+
+The password settings can be customized by application.conf.
+
+```
+    passwordSettings{
+        minimumLength = 16
+        mustContainDigits = true
+        mustContainUpperCase = true
+        mustContainLowerCase = true
+        mustContainSpecial = true
+    }
+```
 
 ## Database Configuration
 By default, an H2 file database with encryption is used for persistence. This can easily be replaced by other vendor. The configuration of the database is 
@@ -59,14 +71,17 @@ done in application settings ([application.conf](src/main/resources/application.
     }   
 ```
 ## Upload configuration
-There are two settings available for customization:
+There are three settings available for customization:
 ```
     uploadSettings{
         directoryPath = "./uploads"
         expirationDays = 6
+        uploadMaxSizeInMb = 2000
     }
 ```
-The path for storing the upload files and the expiration days.
+- The path for storing the upload files (application need to have write access).
+- The default expiration days fur upload files.
+- The upload limit in MB.
 
 ## Requests
 
@@ -127,9 +142,6 @@ For additional information see [Ktor Containerizing](https://ktor.io/docs/docker
 ## Next
 
 The next topics I will work on:
-- Make password settings configurable
-- Make upload size configurable
-- Move default expiration period to application.conf
-- Add OpenAPI specificatoin
-- Optimize serving download content (not storing decrypted version on server but directly streaming to consumer)
+- Add OpenAPI specification
+- Optimize serving download content (not storing decrypted version on server until request is finished but directly streaming to consumer)
 - Add client for better usability
