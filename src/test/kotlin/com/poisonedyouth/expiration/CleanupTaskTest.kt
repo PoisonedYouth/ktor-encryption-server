@@ -9,12 +9,9 @@ import com.poisonedyouth.domain.UserSettings
 import com.poisonedyouth.persistence.PersistenceException
 import com.poisonedyouth.persistence.UploadFileEntity
 import com.poisonedyouth.persistence.UploadFileRepository
-import com.poisonedyouth.persistence.UserEntity
 import com.poisonedyouth.persistence.UserRepository
 import com.poisonedyouth.security.EncryptionManager
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkClass
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlin.io.path.listDirectoryEntries
@@ -22,19 +19,22 @@ import kotlin.io.path.name
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatNoException
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 
-@ExtendWith(KtorServerExtension::class)
 internal class CleanupTaskTest : KoinTest {
     private val uploadFileRepository by inject<UploadFileRepository>()
     private val cleanupTask by inject<CleanupTask>()
     private val userRepository by inject<UserRepository>()
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
 
     @BeforeEach
     fun clearDatabase() {
@@ -61,7 +61,7 @@ internal class CleanupTaskTest : KoinTest {
     @Test
     fun `run not deletes active files`() {
         // given
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -94,7 +94,7 @@ internal class CleanupTaskTest : KoinTest {
     @Test
     fun `run not throws exception if loading files fails`() {
         // given
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(

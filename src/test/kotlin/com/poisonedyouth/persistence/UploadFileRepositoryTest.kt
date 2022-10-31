@@ -1,7 +1,6 @@
 package com.poisonedyouth.persistence
 
 import com.poisonedyouth.KtorServerExtension
-import com.poisonedyouth.KtorServerExtension.Companion.basePath
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.domain.SecuritySettings
 import com.poisonedyouth.domain.UploadFile
@@ -16,21 +15,23 @@ import kotlin.io.path.name
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.*
 
-@ExtendWith(KtorServerExtension::class)
 internal class UploadFileRepositoryTest : KoinTest {
     private val userRepository by inject<UserRepository>()
     private val uploadFileRepository by inject<UploadFileRepository>()
 
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
 
     @BeforeEach
     fun clearDatabase() {
@@ -44,7 +45,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `save persists new upload file`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -99,7 +100,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `save throws PersistenceException if upload file already exist`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -135,7 +136,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             UploadFileEntity.findByEncryptedFilename(any())
         } throws IllegalArgumentException("Failed!")
 
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -167,7 +168,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `findBy returns matching upload file`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -199,7 +200,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `findBy returns null for no matching upload file`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -231,7 +232,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `findBy throws PersistenceException if loading of upload file fails`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -269,7 +270,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `findAllBy returns matching upload files`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -319,7 +320,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `findAllBy returns empty list for no matching files`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -374,7 +375,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             UploadFileEntity.findAllByUsername(any())
         } throws IllegalArgumentException("Failed!")
 
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -425,7 +426,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteExpiredFiles removes matching files`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -447,7 +448,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -467,7 +468,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // make files expired
         transaction { UploadFileEntity.all().forEach { it.created = LocalDateTime.now().minusDays(12) } }
@@ -478,7 +479,7 @@ internal class UploadFileRepositoryTest : KoinTest {
 
         // then
         assertThat(transaction { UploadFileEntity.all().count() }).isZero
-        assertThat(basePath.listDirectoryEntries().map { it.fileName.name }).doesNotContain(
+        assertThat(ktorServerExtension.getTempDirectory().listDirectoryEntries().map { it.fileName.name }).doesNotContain(
             uploadFile.encryptedFilename,
             otherUploadFile.encryptedFilename
         )
@@ -487,7 +488,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteExpiredFiles not removes not expired files`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -509,7 +510,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -529,14 +530,14 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         uploadFileRepository.deleteExpiredFiles()
 
         // then
         assertThat(transaction { UploadFileEntity.all().count() }).isEqualTo(2)
-        assertThat(basePath.listDirectoryEntries().map { it.fileName.name }).contains(
+        assertThat(ktorServerExtension.getTempDirectory().listDirectoryEntries().map { it.fileName.name }).contains(
             uploadFile.encryptedFilename,
             otherUploadFile.encryptedFilename
         )
@@ -550,7 +551,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             UploadFileEntity.getAll()
         } throws IllegalArgumentException("Failed")
 
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -572,7 +573,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -592,7 +593,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when + then
         assertThatThrownBy {
@@ -605,7 +606,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteBy throws PersistenceException if user does not exist`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -627,7 +628,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -647,7 +648,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when + then
         assertThatThrownBy {
@@ -658,7 +659,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteBy returns false if upload file does not exist`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -680,7 +681,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -700,7 +701,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         val actual = uploadFileRepository.deleteBy(owner.username, "not existing file")
@@ -717,7 +718,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             UploadFileEntity.findByEncryptedFilenameAndUser(any(), any())
         } throws IllegalStateException("Failed")
 
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -739,7 +740,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -759,7 +760,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         assertThatThrownBy {
@@ -772,7 +773,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteBy removes matching upload file`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -794,7 +795,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -814,7 +815,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         val actual = uploadFileRepository.deleteBy(owner.username, uploadFile.encryptedFilename)
@@ -830,7 +831,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteAllBy removes matching upload files`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -852,7 +853,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -872,7 +873,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         val actual = uploadFileRepository.deleteAllBy(owner.username)
@@ -888,7 +889,7 @@ internal class UploadFileRepositoryTest : KoinTest {
     @Test
     fun `deleteAllBy throws PersistenceException if user does not exist`() {
         // given
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -910,7 +911,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -930,7 +931,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         assertThatThrownBy {
@@ -946,7 +947,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             UploadFileEntity.findAllByUsername(any())
         } throws IllegalStateException("Failed")
 
-        val tempFile = Files.createFile(basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -968,7 +969,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(uploadFile)
-        Files.writeString(basePath.resolve(uploadFile.encryptedFilename), "text1")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(uploadFile.encryptedFilename), "text1")
         val otherUploadFile = UploadFile(
             filename = "otherFile.txt",
             encryptedFilename = "encrypted2",
@@ -988,7 +989,7 @@ internal class UploadFileRepositoryTest : KoinTest {
             created = LocalDateTime.now().minusDays(10)
         )
         uploadFileRepository.save(otherUploadFile)
-        Files.writeString(basePath.resolve(otherUploadFile.encryptedFilename), "text2")
+        Files.writeString(ktorServerExtension.getTempDirectory().resolve(otherUploadFile.encryptedFilename), "text2")
 
         // when
         assertThatThrownBy {

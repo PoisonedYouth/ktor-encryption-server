@@ -14,20 +14,22 @@ import io.mockk.unmockkObject
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 
-@ExtendWith(KtorServerExtension::class)
 internal class UploadFileHistoryRepositoryTest : KoinTest {
     private val userRepository by inject<UserRepository>()
     private val uploadFileRepository by inject<UploadFileRepository>()
     private val uploadFileHistoryRepository by inject<UploadFileHistoryRepository>()
-
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
     @BeforeEach
     fun clearDatabase() {
         transaction {
@@ -67,7 +69,7 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
     @Test
     fun `save persists throws PersistenceException if upload file does not exist`() {
         // given
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
         val owner = persistUser("poisonedyouth")
 
 
@@ -125,7 +127,7 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
 
 
     private fun createUploadFile(encryptedName: String): UploadFile {
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve(encryptedName))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve(encryptedName))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(

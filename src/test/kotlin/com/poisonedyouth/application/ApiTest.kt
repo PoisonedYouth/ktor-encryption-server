@@ -49,17 +49,21 @@ import org.assertj.core.api.Assertions.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 import java.util.*
 
-@ExtendWith(KtorServerExtension::class)
 class ApiTest : KoinTest {
     private val uploadFileRepository by inject<UploadFileRepository>()
     private val userRepository by inject<UserRepository>()
     private val userService by inject<UserService>()
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
 
     @BeforeEach
     fun clearDatabase() {
@@ -299,7 +303,7 @@ class ApiTest : KoinTest {
     }
 
     private fun createUploadResult(user: User): Pair<String, UploadFile> {
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("encrypted"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("encrypted"))
 
         val encryptionResult = EncryptionManager.encryptSteam(
             "FileContent".byteInputStream(),

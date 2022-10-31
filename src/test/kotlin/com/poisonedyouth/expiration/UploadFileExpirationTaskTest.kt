@@ -19,20 +19,23 @@ import kotlin.io.path.name
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatNoException
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 import java.time.LocalDateTime
 
-@ExtendWith(KtorServerExtension::class)
 internal class UploadFileExpirationTaskTest : KoinTest {
     private val uploadFileRepository by inject<UploadFileRepository>()
     private val userRepository by inject<UserRepository>()
     private val expirationTask by inject<UploadFileExpirationTask>()
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
 
     @BeforeEach
     fun clearDatabase() {
@@ -44,7 +47,7 @@ internal class UploadFileExpirationTaskTest : KoinTest {
     @Test
     fun `run deletes expired upload files`() {
         // given
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -80,7 +83,7 @@ internal class UploadFileExpirationTaskTest : KoinTest {
     @Test
     fun `run not deletes active upload files`() {
         // given
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -118,7 +121,7 @@ internal class UploadFileExpirationTaskTest : KoinTest {
             UploadFileEntity.getAll()
         } throws PersistenceException("Failed")
 
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(

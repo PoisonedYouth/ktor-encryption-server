@@ -1,7 +1,7 @@
 package com.poisonedyouth
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.poisonedyouth.application.deleteDirectoryRecursively
+import com.google.common.jimfs.Jimfs
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.Auth
@@ -23,15 +23,20 @@ import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.*
 
 class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
     companion object {
         private lateinit var server: NettyApplicationEngine
-
-        val basePath: Path = Files.createTempDirectory("ktor-encryption-server")
     }
+
+    private val fileSystem: FileSystem = Jimfs.newFileSystem()
+    private lateinit var tempDirectory: Path
+
+    fun getTempDirectory(): Path = tempDirectory
 
     override fun beforeAll(context: ExtensionContext?) {
         val env = applicationEngineEnvironment {
@@ -46,16 +51,15 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
     }
 
     override fun beforeEach(context: ExtensionContext?) {
-        deleteDirectoryRecursively(basePath)
-        Files.createDirectory(basePath)
-        mockkObject(ApplicationConfiguration)
+        tempDirectory = fileSystem.getPath(UUID.randomUUID().toString())
+        Files.createDirectories(tempDirectory)
+        mockkObject (ApplicationConfiguration)
         every {
             ApplicationConfiguration.getUploadDirectory()
-        } returns basePath
+        } returns tempDirectory
     }
 
     override fun afterEach(context: ExtensionContext?) {
-        deleteDirectoryRecursively(basePath)
         unmockkObject(ApplicationConfiguration)
 
     }
@@ -68,7 +72,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
 fun createHttpClient(username: String = "username", password: String = "password"): HttpClient {
     val client = HttpClient {
         install(ContentNegotiation) {
-            jackson{
+            jackson {
                 registerModule(JavaTimeModule())
             }
         }

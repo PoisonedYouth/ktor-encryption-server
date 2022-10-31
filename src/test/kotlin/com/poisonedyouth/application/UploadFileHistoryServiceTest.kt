@@ -19,20 +19,23 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 import java.time.LocalDateTime
 
-@ExtendWith(KtorServerExtension::class)
 internal class UploadFileHistoryServiceTest : KoinTest {
     private val uploadFileHistoryService by inject<UploadFileHistoryService>()
     private val userRepository by inject<UserRepository>()
     private val uploadFileRepository by inject<UploadFileRepository>()
+    companion object {
+        @RegisterExtension
+        @JvmStatic
+        private val ktorServerExtension = KtorServerExtension()
+    }
 
     @BeforeEach
     fun clearDatabase() {
@@ -67,7 +70,7 @@ internal class UploadFileHistoryServiceTest : KoinTest {
         val ipAddress = "10.1.1.1"
         val action = UploadAction.UPLOAD
 
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(
@@ -214,7 +217,7 @@ internal class UploadFileHistoryServiceTest : KoinTest {
     }
 
     private fun createUploadFile(): UploadFile {
-        val tempFile = Files.createFile(KtorServerExtension.basePath.resolve("test.txt"))
+        val tempFile = Files.createFile(ktorServerExtension.getTempDirectory().resolve("test.txt"))
 
         val owner = persistUser("poisonedyouth")
         val uploadFile = UploadFile(

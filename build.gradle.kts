@@ -86,7 +86,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-auth:$ktorVersion")
     testImplementation("io.mockk:mockk-jvm:1.13.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
-
+    testImplementation("com.google.jimfs:jimfs:1.2")
 
 }
 
