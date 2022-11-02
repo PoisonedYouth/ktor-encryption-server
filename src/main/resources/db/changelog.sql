@@ -3,14 +3,14 @@
 -- changeset liquibase:1
 CREATE TABLE app_user_settings
 (
-    id                          BIGINT PRIMARY KEY NOT NULL,
+    id                          SERIAL PRIMARY KEY NOT NULL,
     upload_file_expiration_days BIGINT             NOT NULL,
     created                     TIMESTAMP          NOT NULL,
     last_updated                TIMESTAMP          NOT NULL
 );
 CREATE TABLE security_settings
 (
-    id                                BIGINT PRIMARY KEY NOT NULL,
+    id                                SERIAL PRIMARY KEY NOT NULL,
     integrity_check_hashing_algorithm TEXT               NOT NULL,
     password_key_size                 INT                NOT NULL,
     nonce_length                      INT                NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE security_settings
 );
 CREATE TABLE app_user
 (
-    id                   BIGINT PRIMARY KEY NOT NULL,
+    id                   SERIAL PRIMARY KEY NOT NULL,
     username             TEXT UNIQUE        NOT NULL,
     password             BYTEA              NOT NULL,
     salt                 BYTEA              NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE app_user
 );
 CREATE TABLE upload_file
 (
-    id                 BIGINT PRIMARY KEY NOT NULL,
+    id                 SERIAL PRIMARY KEY NOT NULL,
     filename           TEXT               NOT NULL,
     encrypted_filename TEXT UNIQUE        NOT NULL,
     salt               BYTEA              NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE upload_file
 );
 CREATE TABLE upload_file_history
 (
-    id             BIGINT PRIMARY KEY NOT NULL,
+    id             SERIAL PRIMARY KEY NOT NULL,
     ip_address     TEXT               NOT NULL,
     created        TIMESTAMP          NOT NULL,
     action         TEXT               NOT NULL,
