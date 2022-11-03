@@ -5,7 +5,7 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     volumes:
-      - data:/var/lib/upload
+      - data:/app/uploads
     ports:
       - '8080:8080'
     depends_on:
