@@ -33,6 +33,7 @@ class UserServiceImpl(
 ) : UserService {
     private val logger: Logger = LoggerFactory.getLogger(UserService::class.java)
     override fun save(userDto: UserDto): ApiResult<String> {
+        logger.info("Start saving user '$userDto'...")
         try {
             if (userRepository.findBy(userDto.username) != null) {
                 throw ApplicationServiceException(
@@ -48,17 +49,19 @@ class UserServiceImpl(
                     "Password '${userDto.password}' does not fulfill requirements: ($validationResult)"
                 )
             }
+            val username = userRepository.save(
+                User(
+                    username = userDto.username,
+                    encryptionResult = EncryptionManager.encryptPassword(userDto.password),
+                    userSettings = UserSettings(
+                        uploadFileExpirationDays = userDto.userSettings.uploadFileExpirationDays
+                    ),
+                    securitySettings = defaultSecurityFileSettings()
+                )
+            ).username
+            logger.info("Successfully saved user with username '$username'.")
             return ApiResult.Success(
-                userRepository.save(
-                    User(
-                        username = userDto.username,
-                        encryptionResult = EncryptionManager.encryptPassword(userDto.password),
-                        userSettings = UserSettings(
-                            uploadFileExpirationDays = userDto.userSettings.uploadFileExpirationDays
-                        ),
-                        securitySettings = defaultSecurityFileSettings()
-                    )
-                ).username
+                username
             )
         } catch (e: GeneralException) {
             return ApiResult.Failure(e.errorCode, e.message)
@@ -66,6 +69,7 @@ class UserServiceImpl(
     }
 
     override fun authenticate(userDto: UserDto): ApiResult<Unit> {
+        logger.info("Start authenticating user '$userDto'...")
         return try {
             val existingUser = userRepository.findBy(userDto.username)
             if (existingUser == null) {
@@ -87,6 +91,7 @@ class UserServiceImpl(
                     "Password for user with username '${userDto.username}' is wrong."
                 )
             }
+            logger.info("Successfully authenticated user '$userDto'.")
             ApiResult.Success(Unit)
         } catch (e: GeneralException) {
             ApiResult.Failure(e.errorCode, e.message)
@@ -94,6 +99,7 @@ class UserServiceImpl(
     }
 
     override fun delete(username: String): ApiResult<String> {
+        logger.info("Start deleting user '$username'...")
         return try {
             val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
@@ -102,6 +108,7 @@ class UserServiceImpl(
             }
             uploadFileRepository.deleteAllBy(username)
             userRepository.delete(username)
+            logger.info("Successfully deleted user '$username'.")
             ApiResult.Success("Successfully deleted user")
         } catch (e: GeneralException) {
             ApiResult.Failure(e.errorCode, e.message)
@@ -109,6 +116,7 @@ class UserServiceImpl(
     }
 
     override fun updatePassword(username: String, passwordDto: UpdatePasswordDto): ApiResult<String> {
+        logger.info("Start updating password for user '$username'...")
         return try {
             val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
@@ -129,6 +137,7 @@ class UserServiceImpl(
                     encryptionResult = encryptionResult
                 )
             )
+            logger.info("Successfully updated password for user '$username'.")
             ApiResult.Success("Successfully updated password.")
         } catch (e: GeneralException) {
             ApiResult.Failure(e.errorCode, e.message)
@@ -136,6 +145,7 @@ class UserServiceImpl(
     }
 
     override fun updateSettings(username: String, userSettingsDto: UserSettingsDto): ApiResult<String> {
+        logger.info("Start updating user '$username'...")
         return try {
             val existingUser = userRepository.findBy(username)
             if (existingUser == null) {
@@ -149,6 +159,7 @@ class UserServiceImpl(
                     )
                 )
             )
+            logger.info("Successfully updated user '$username'.")
             ApiResult.Success("Successfully updated user settings.")
         } catch (e: IllegalArgumentException) {
             logger.error("User settings '$userSettingsDto' not fulfill requirements", e)

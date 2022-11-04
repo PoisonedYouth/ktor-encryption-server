@@ -55,6 +55,7 @@ class FileHandlerImpl(
         contentLength: Long?,
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>> {
+        logger.info("Starting upload files for user '$username'...")
         return try {
             if (contentLength == null) {
                 return Failure(
@@ -82,13 +83,15 @@ class FileHandlerImpl(
             Success(result.onEach {
                 handleUploadFile(it, existingUser, origin)
             }.map {
-                UploadFileDto(
+                val uploadFileDto = UploadFileDto(
                     filename = it.second.filename,
                     encryptedFilename = it.second.encryptedFilename,
                     password = it.first,
                     downloadLink = buildDownloadLink(origin, it.second.encryptedFilename, it.first),
                     deleteLink = buildDeleteLink(origin, it.second.encryptedFilename)
                 )
+                logger.info("Successfully uploaded '${uploadFileDto.encryptedFilename}'.")
+                uploadFileDto
             })
         } catch (e: GeneralException) {
             Failure(e.errorCode, e.message)
@@ -139,14 +142,17 @@ class FileHandlerImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<Path> {
+        logger.info("Starting download '${downloadFileDto.filename}...")
         return try {
-            Success(fileEncryptionService.decryptFile(downloadFileDto).also {
+            val decryptedFile = fileEncryptionService.decryptFile(downloadFileDto).also {
                 uploadFileHistoryService.addUploadFileHistoryEntry(
                     ipAddress = ipAddress,
                     action = DOWNLOAD,
                     encryptedFilename = downloadFileDto.filename
                 )
-            })
+            }
+            logger.info("Successfully downloaded file '${downloadFileDto.filename}'.")
+            Success(decryptedFile)
         } catch (e: IllegalStateException) {
             logger.error("Download file '${downloadFileDto.filename}' not found.", e)
             Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")
@@ -157,10 +163,13 @@ class FileHandlerImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>> {
+        logger.info("Start getting upload files for user '$username'...")
         return try {
-            Success(uploadFileRepository.findAllBy(username).map {
+            val uploadFiles = uploadFileRepository.findAllBy(username).map {
                 it.toUploadFileOverviewDto()
-            })
+            }
+            logger.info("Successfully get upload files for user '$username'.")
+            Success(uploadFiles)
         } catch (e: GeneralException) {
             Failure(e.errorCode, e.message)
         }
@@ -168,11 +177,12 @@ class FileHandlerImpl(
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
     override suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean> {
+        logger.info("Start deleting upload file '$encryptedFilename'for user '$username'...")
         return try {
             if (encryptedFilename == null) {
                 throw ApplicationServiceException(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
             }
-            logger.info("Deleted upload file  with encrypted filename '$encryptedFilename'.")
+            logger.info("Deleted upload file  with encrypted filename '$encryptedFilename' for user '$username'.")
             Success(uploadFileRepository.deleteBy(username, encryptedFilename))
         } catch (e: GeneralException) {
             Failure(e.errorCode, e.message)
