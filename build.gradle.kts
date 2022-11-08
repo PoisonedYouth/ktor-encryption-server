@@ -82,7 +82,7 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
     // testing
-    implementation("com.h2database:h2:2.1.214")
+    testImplementation("com.h2database:h2:2.1.214")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.assertj:assertj-core:3.23.1")
