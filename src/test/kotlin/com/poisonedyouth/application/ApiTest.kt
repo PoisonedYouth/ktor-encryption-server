@@ -38,6 +38,7 @@ import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
+import io.ktor.utils.io.readUTF8Line
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readBytes
@@ -52,6 +53,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.*
 
@@ -59,6 +62,7 @@ class ApiTest : KoinTest {
     private val uploadFileRepository by inject<UploadFileRepository>()
     private val userRepository by inject<UserRepository>()
     private val userService by inject<UserService>()
+
     companion object {
         @RegisterExtension
         @JvmStatic
@@ -273,16 +277,11 @@ class ApiTest : KoinTest {
         }
 
         // then
-        val downloadFile = withContext(Dispatchers.IO) {
-            Files.createTempFile("download", "txt")
+        withContext(Dispatchers.IO) {
+            val content = response.content.readUTF8Line()
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            assertThat(content).isEqualTo("FileContent")
         }
-        response.content.copyAndClose(downloadFile.toFile().writeChannel())
-        assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-        assertThat(withContext(Dispatchers.IO) {
-            Files.readString(downloadFile)
-        }).isEqualTo("FileContent")
-
-        downloadFile.deleteIfExists()
     }
 
     private fun persistUser(username: String, password: String): User {

@@ -57,10 +57,12 @@ fun Application.setupApplicationConfiguration() {
     val directoryPath = uploadSettings.property("directoryPath").getString()
     val expirationDays = uploadSettings.property("expirationDays").getString().toLong()
     val uploadMaxSizeInMb = uploadSettings.property("uploadMaxSizeInMb").getString().toLong()
+    val validMimeTypes = uploadSettings.property("validMimeTypes").getList()
     ApplicationConfiguration.uploadSettings = UploadSettings(
         directoryPath = directoryPath,
         expirationDays = expirationDays,
-        uploadMaxSizeInMb = uploadMaxSizeInMb
+        uploadMaxSizeInMb = uploadMaxSizeInMb,
+        validMimeTypes = validMimeTypes
     )
     createUploadDirectory(directoryPath)
 
@@ -108,6 +110,7 @@ data class UploadSettings(
     val directoryPath: String,
     val expirationDays: Long,
     val uploadMaxSizeInMb: Long,
+    val validMimeTypes: List<String>,
 )
 
 data class PasswordSettings(

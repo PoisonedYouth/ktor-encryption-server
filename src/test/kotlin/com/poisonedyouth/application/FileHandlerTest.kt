@@ -27,8 +27,13 @@ import io.ktor.utils.io.streams.asInput
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import javax.imageio.ImageIO
+import kotlin.io.path.inputStream
+import kotlin.io.path.outputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Assertions.*
@@ -37,6 +42,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage.TYPE_INT_RGB
+import java.io.InputStream
 import java.nio.file.Files
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -104,7 +112,7 @@ internal class FileHandlerTest : KoinTest {
         val user = persistUser("poisonedyouth")
 
 
-        val multiPartData = createMultipartData("file1.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt"))
 
         // when
         val actual = fileHandler.upload(
@@ -128,7 +136,7 @@ internal class FileHandlerTest : KoinTest {
         val user = persistUser("poisonedyouth")
 
 
-        val multiPartData = createMultipartData("file1.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt"))
 
         // when
         val actual = fileHandler.upload(
@@ -144,12 +152,39 @@ internal class FileHandlerTest : KoinTest {
     }
 
     @Test
+    fun `upload returns failure if uploaded file is not a valid mime type`() = runTest {
+        // given
+        val user = persistUser("poisonedyouth")
+
+        // Create not allowed mime type
+        val rgb = BufferedImage(100, 100, TYPE_INT_RGB)
+        val file = withContext(Dispatchers.IO) {
+            val file = Files.createFile(ktorServerExtension.getTempDirectory().resolve("file1.png"))
+            ImageIO.write(rgb, "png", file.outputStream())
+            file
+        }
+        val multiPartData = createMultipartData(listOf("file1.txt"), file.inputStream())
+
+        // when
+        val actual = fileHandler.upload(
+            username = user.username,
+            origin = createRequestConnectionPoint(),
+            contentLength = 5000,
+            multiPartData = multiPartData
+        )
+
+        // then
+        assertThat(actual).isInstanceOf(Failure::class.java)
+        assertThat((actual as Failure).errorCode).isEqualTo(ErrorCode.NOT_ACCEPTED_MIME_TYPE)
+    }
+
+    @Test
     fun `upload returns failure if content length header is missing`() = runTest {
         // given
         val user = persistUser("poisonedyouth")
 
 
-        val multiPartData = createMultipartData("file1.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt"))
 
         // when
         val actual = fileHandler.upload(
@@ -170,7 +205,7 @@ internal class FileHandlerTest : KoinTest {
         val user = persistUser("poisonedyouth")
 
 
-        val multiPartData = createMultipartData("file1.txt", "file2.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt", "file2.txt"))
 
         // when
         val actual = fileHandler.upload(
@@ -193,7 +228,7 @@ internal class FileHandlerTest : KoinTest {
         persistUser("poisonedyouth")
 
 
-        val multiPartData = createMultipartData("file1.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt"))
 
         // when
         val actual = fileHandler.upload(
@@ -213,7 +248,7 @@ internal class FileHandlerTest : KoinTest {
         // given
         val user = persistUser("poisonedyouth")
 
-        val multiPartData = createMultipartData("file1.txt")
+        val multiPartData = createMultipartData(listOf("file1.txt"))
 
         mockkObject(UploadFileEntity)
         every {
@@ -356,9 +391,9 @@ internal class FileHandlerTest : KoinTest {
         }
     }
 
-    private fun createMultipartData(vararg filename: String): MultiPartData {
-        val fileItems = filename.map {
-            PartData.FileItem({ byteArrayOf(1, 2, 3).inputStream().asInput() }, {}, headersOf(
+    private fun createMultipartData (filenames: List<String>, inputStream: InputStream = byteArrayOf(1, 2, 3).inputStream()): MultiPartData {
+        val fileItems = filenames.map {
+            PartData.FileItem({ inputStream.asInput() }, {}, headersOf(
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.File
                     .withParameter(ContentDisposition.Parameters.Name, "file")

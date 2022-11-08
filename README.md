@@ -94,12 +94,14 @@ There are three settings available for customization:
         directoryPath = "./uploads"
         expirationDays = 6
         uploadMaxSizeInMb = 2000
+        validMimeTypes = ["application/pdf", "text/plain", "application/octet-stream"]
     }
 ```
 
 - The path for storing the upload files (application need to have write access).
 - The default expiration days fur upload files.
 - The upload limit in MB.
+- The valid mime types that are accepted for upload. For detection of mime type Apache Tika is used.
 
 ## Requests
 

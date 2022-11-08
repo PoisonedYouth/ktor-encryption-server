@@ -60,6 +60,9 @@ dependencies {
     // password security
     implementation("org.passay:passay:1.6.2")
 
+    // mime content detection
+    implementation("org.apache.tika:tika-core:2.6.0")
+
     // exposed
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
@@ -79,7 +82,7 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
     // testing
-    testImplementation("com.h2database:h2:2.1.214")
+    implementation("com.h2database:h2:2.1.214")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.assertj:assertj-core:3.23.1")
