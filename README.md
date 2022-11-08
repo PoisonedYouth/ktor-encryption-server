@@ -3,7 +3,7 @@
 The **ktor-encryption-server** project provides functionality for secure storage and transfer of files. For accessing
 the functionality a REST API is available.
 
-Current version 0.0.1 contains the following functionality:
+Current version 0.0.3 contains the following functionality:
 
 ## General functionality
 
