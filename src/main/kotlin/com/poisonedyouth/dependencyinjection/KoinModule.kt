@@ -1,5 +1,7 @@
 package com.poisonedyouth.dependencyinjection
 
+import com.poisonedyouth.api.UploadFileController
+import com.poisonedyouth.api.UploadFileControllerImpl
 import com.poisonedyouth.api.UserController
 import com.poisonedyouth.api.UserControllerImpl
 import com.poisonedyouth.application.FileEncryptionService
@@ -35,6 +37,7 @@ val encryptionServerModule = module {
     single<UploadFileHistoryRepository> { UploadFileHistoryRepositoryImpl() }
     single<UploadFileHistoryService> { UploadFileHistoryServiceImpl(get(), get(), get()) }
     single<UserController>{ UserControllerImpl(get()) }
+    single<UploadFileController>{UploadFileControllerImpl(get(), get())}
 }
 
 fun Application.setupKoin() {

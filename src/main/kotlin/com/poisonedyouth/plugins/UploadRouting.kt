@@ -1,21 +1,17 @@
 package com.poisonedyouth.plugins
 
 import com.poisonedyouth.api.DownloadFileDto
+import com.poisonedyouth.api.UploadFileController
 import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
-import com.poisonedyouth.application.FileHandler
-import com.poisonedyouth.application.UploadFileHistoryService
 import com.poisonedyouth.application.deleteDirectoryRecursively
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.plugins.origin
-import io.ktor.server.request.header
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.Routing
@@ -31,79 +27,33 @@ const val ENCRYPTED_FILENAME_QUERY_PARAM = "encryptedfilename"
 const val PASSWORD_QUERY_PARAM = "password"
 
 fun Routing.configureUploadRouting() {
-    val fileHandler by inject<FileHandler>()
-    val uploadFileHistoryService by inject<UploadFileHistoryService>()
+    val uploadFileController by inject<UploadFileController>()
 
     authenticate("userAuthentication") {
         route("api/upload") {
             post("") {
                 call.principal<UserIdPrincipal>()?.name?.let { username ->
-                    val result = fileHandler.upload(
-                        username = username,
-                        origin = call.request.origin,
-                        contentLength = call.request.header(HttpHeaders.ContentLength)?.toLong(),
-                        multiPartData = call.receiveMultipart()
-                    )
-                    when (result) {
-                        is Success -> call.respond(HttpStatusCode.Created, result)
-                        is Failure -> handleFailureResponse(call, result)
-                    }
+                    uploadFileController.uploadFile(call, username)
                 }
             }
             get("") {
                 call.principal<UserIdPrincipal>()?.name?.let { username ->
-                    when (val result = fileHandler.getUploadFiles(username)) {
-                        is Success -> call.respond(HttpStatusCode.OK, result)
-                        is Failure -> handleFailureResponse(call, result)
-                    }
+                    uploadFileController.getUploadFiles(call, username)
                 }
             }
             get("/history") {
                 call.principal<UserIdPrincipal>()?.name?.let { username ->
-                    when (val result = uploadFileHistoryService.getUploadFileHistory(username)) {
-                        is Success -> call.respond(HttpStatusCode.OK, result)
-                        is Failure -> handleFailureResponse(call, result)
-                    }
+                    uploadFileController.getUploadFileHistory(call, username)
                 }
             }
             delete("") {
                 call.principal<UserIdPrincipal>()?.name?.let { username ->
-                    when (val result =
-                        fileHandler.delete(username, call.request.queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM])) {
-                        is Success -> call.respond(HttpStatusCode.OK, result)
-                        is Failure -> handleFailureResponse(call, result)
-                    }
+                    uploadFileController.deleteUploadFile(call, username)
                 }
             }
         }
     }
     get("api/download") {
-        val queryParameters = call.request.queryParameters
-        val password = queryParameters[PASSWORD_QUERY_PARAM]
-        val encryptedFilename = queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM]
-        val result =
-            if (encryptedFilename != null && password != null) {
-                fileHandler.download(
-                    DownloadFileDto(
-                        filename = encryptedFilename,
-                        password = password
-                    ),
-                    ipAddress = call.request.origin.remoteHost
-                )
-            } else {
-                fileHandler.download(
-                    downloadFileDto = call.receive(),
-                    ipAddress = call.request.origin.host
-                )
-            }
-        when (result) {
-            is Success -> call.respondFile(
-                baseDir = result.value.parent.toFile(),
-                fileName = result.value.fileName.name
-            )
-                .also { deleteDirectoryRecursively(result.value.parent) }
-
-            is Failure -> handleFailureResponse(call, result)
-        }
+        uploadFileController.downloadFile(call)
     }
 }
