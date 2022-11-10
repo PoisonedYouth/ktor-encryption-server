@@ -30,7 +30,7 @@ repositories {
 ktor {
     docker {
         localImageName.set("ktor-encryption-server")
-        imageTag.set("0.0.3")
+        imageTag.set("0.0.4")
         portMappings.set(listOf(DockerPortMapping(8080, 8080)))
     }
 }
