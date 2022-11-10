@@ -38,6 +38,7 @@ class UploadFileRepositoryImpl : UploadFileRepository {
                 salt = uploadFile.encryptionResult.salt
                 nonce = uploadFile.encryptionResult.nonce
                 created = currentDateTime
+                mimeType = uploadFile.mimeType
                 user = UserEntity.find { UserTable.username eq uploadFile.owner!!.username }.first()
                 settings = SecuritySettingsEntity.newFromSecuritySettings(uploadFile.settings)
             }
@@ -138,6 +139,7 @@ fun UploadFileEntity.toUploadFile() = UploadFile(
         nonce = this.nonce,
         salt = this.salt
     ),
+    mimeType = this.mimeType,
     owner = this.user.toUser(),
     settings = this.settings.toSecuritySettings(),
     created = this.created

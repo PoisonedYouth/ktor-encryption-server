@@ -59,3 +59,6 @@ CREATE TABLE upload_file_history
     upload_file_id BIGINT             NOT NULL,
     FOREIGN KEY (upload_file_id) REFERENCES upload_file (id) ON UPDATE cascade ON DELETE cascade
 );
+
+-- changeset liquibase:2
+ALTER TABLE upload_file ADD COLUMN mime_type TEXT NOT NULL DEFAULT '*'

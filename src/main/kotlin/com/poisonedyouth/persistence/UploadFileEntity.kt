@@ -16,6 +16,7 @@ class UploadFileEntity(id: EntityID<Long>) : LongEntity(id) {
     var iv by UploadFileTable.iv
     var salt by UploadFileTable.salt
     var created by UploadFileTable.created
+    var mimeType by UploadFileTable.mimeType
     var user by UserEntity referencedOn UploadFileTable.user
     var settings by SecuritySettingsEntity referencedOn UploadFileTable.settings
 
@@ -51,6 +52,7 @@ object UploadFileTable : LongIdTable("upload_file", "id") {
     val salt = binary("salt")
     val iv = binary("iv")
     val created = datetime("created")
+    val mimeType = varchar("mime_type", DEFAULT_VARCHAR_COLUMN_LENGTH)
     val user = reference("user_id", UserTable)
     val settings = reference("settings_id", SecuritySettingsTable)
 }

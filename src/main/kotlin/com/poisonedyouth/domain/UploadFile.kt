@@ -10,6 +10,7 @@ data class UploadFile(
     val filename: String,
     val encryptedFilename: String,
     val encryptionResult: FileEncryptionResult,
+    val mimeType: String,
     val created: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
     val owner: User? = null,
     val settings: SecuritySettings

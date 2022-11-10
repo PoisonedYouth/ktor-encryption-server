@@ -42,6 +42,7 @@ CREATE TABLE upload_file
     created            TIMESTAMP          NOT NULL,
     iv                 BYTEA              NOT NULL,
     nonce              BYTEA              NOT NULL,
+    mime_type          TEXT               NOT NULL,
     user_id            BIGINT             NOT NULL,
     settings_id        BIGINT             NOT NULL,
     FOREIGN KEY (user_id) REFERENCES app_user (id) ON UPDATE cascade ON DELETE cascade,
