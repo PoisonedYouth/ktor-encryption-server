@@ -7,6 +7,7 @@ import com.poisonedyouth.expiration.setupCleanupTask
 import com.poisonedyouth.expiration.setupUploadFileExpirationTask
 import com.poisonedyouth.persistence.migrateDatabaseSchema
 import com.poisonedyouth.persistence.setupDatabase
+import com.poisonedyouth.plugins.configureCallLogging
 import com.poisonedyouth.plugins.configureRouting
 import com.poisonedyouth.plugins.configureSecurity
 import com.poisonedyouth.plugins.configureSerialization
@@ -26,6 +27,7 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
     configureRouting()
+    configureCallLogging()
 
     setupUploadFileExpirationTask()
     setupCleanupTask()
