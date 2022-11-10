@@ -71,8 +71,9 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
-    // postgresql
+    // database
     implementation("org.postgresql:postgresql:42.5.0")
+    implementation("com.h2database:h2:2.1.214")
 
     // liquibase
     implementation("org.liquibase:liquibase-core:4.15.0")
@@ -82,7 +83,6 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
 
     // testing
-    testImplementation("com.h2database:h2:2.1.214")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("org.assertj:assertj-core:3.23.1")

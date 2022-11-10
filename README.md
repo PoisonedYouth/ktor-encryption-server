@@ -157,6 +157,11 @@ in [Postman Collection](postman/KtorEncryptionServer.postman_collection.json)
 The **ktor-encryption-server** can be run in docker using the [Dockerfile](Dockerfile) or directly use the
 [docker-compose.yml](docker-compose.yml) to start the application together with the postgresql container.
 
+For local development it is possible to run the server with a
+development [application configuration](src/main/resources/application-dev.conf). For this it is necessary to
+specify the "config" as programm argument in the run configuration (
+see https://ktor.io/docs/configurations.html#command-line)
+
 ## Next
 
 The next topics I will work on:
