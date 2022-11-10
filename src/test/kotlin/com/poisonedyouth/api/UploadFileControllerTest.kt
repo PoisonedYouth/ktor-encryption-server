@@ -117,13 +117,15 @@ internal class UploadFileControllerTest : KoinTest {
 
         val encryptionResult = EncryptionManager.encryptSteam(
             "FileContent".byteInputStream(),
-            tempFile
+            tempFile,
+            "secret.txt"
         )
         val uploadFile = UploadFile(
             filename = "secret.txt",
             encryptedFilename = "encrypted",
             encryptionResult = encryptionResult.second,
             owner = user,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 256,

@@ -53,9 +53,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -108,9 +110,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -144,9 +148,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -176,9 +182,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -208,9 +216,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -240,9 +250,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -278,9 +290,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -296,9 +310,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -328,9 +344,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -346,9 +364,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -383,9 +403,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -401,9 +423,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -434,9 +458,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -454,9 +480,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -496,9 +524,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -516,9 +546,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -559,9 +591,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -579,9 +613,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -614,9 +650,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -634,9 +672,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -667,9 +707,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -687,9 +729,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -726,9 +770,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -746,9 +792,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -781,9 +829,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -801,9 +851,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -839,9 +891,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -859,9 +913,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -897,9 +953,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -917,9 +975,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -955,9 +1015,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -975,9 +1037,11 @@ internal class UploadFileRepositoryTest : KoinTest {
             encryptedFilename = "encrypted2",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,

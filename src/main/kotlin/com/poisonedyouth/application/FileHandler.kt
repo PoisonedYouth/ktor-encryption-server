@@ -26,7 +26,7 @@ import io.ktor.http.content.MultiPartData
 import io.ktor.http.parametersOf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
+import java.io.OutputStream
 
 interface FileHandler {
     suspend fun getUploadFiles(username: String): ApiResult<List<UploadFileOverviewDto>>
@@ -37,8 +37,10 @@ interface FileHandler {
         multiPartData: MultiPartData
     ): ApiResult<List<UploadFileDto>>
 
-    suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<Path>
+    suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String, outputStream: OutputStream): ApiResult<Unit>
     suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
+
+    suspend fun getContentType(downloadFileDto: DownloadFileDto): ApiResult<String>
 }
 
 class FileHandlerImpl(
@@ -141,10 +143,10 @@ class FileHandlerImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String): ApiResult<Path> {
+    override suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String, outputStream: OutputStream): ApiResult<Unit> {
         logger.info("Starting download '${downloadFileDto.filename}...")
         return try {
-            val decryptedFile = fileEncryptionService.decryptFile(downloadFileDto).also {
+            fileEncryptionService.decryptFile(downloadFileDto, outputStream).also {
                 uploadFileHistoryService.addUploadFileHistoryEntry(
                     ipAddress = ipAddress,
                     action = DOWNLOAD,
@@ -152,7 +154,7 @@ class FileHandlerImpl(
                 )
             }
             logger.info("Successfully downloaded file '${downloadFileDto.filename}'.")
-            Success(decryptedFile)
+            Success(Unit)
         } catch (e: IllegalStateException) {
             logger.error("Download file '${downloadFileDto.filename}' not found.", e)
             Failure(FILE_NOT_FOUND, "Download file '${downloadFileDto.filename}' not found.")
@@ -186,6 +188,16 @@ class FileHandlerImpl(
             Success(uploadFileRepository.deleteBy(username, encryptedFilename))
         } catch (e: GeneralException) {
             Failure(e.errorCode, e.message)
+        }
+    }
+
+    override suspend fun getContentType(downloadFileDto: DownloadFileDto): ApiResult<String> {
+        val uploadFile = uploadFileRepository.findBy(downloadFileDto.filename)
+        return if (uploadFile == null) {
+            logger.error("Upload file with encrypted name '${downloadFileDto.filename}' not found.")
+            Failure(FILE_NOT_FOUND, "Upload file with encrypted name '${downloadFileDto.filename}' not found.")
+        } else {
+            Success(uploadFile.mimeType)
         }
     }
 }

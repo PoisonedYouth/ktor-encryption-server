@@ -44,7 +44,9 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -281,11 +283,12 @@ internal class FileHandlerTest : KoinTest {
         )
 
         // when
-        val actual = fileHandler.download(downloadFileDto, "10.1.1.1")
+        val outputStream = ByteArrayOutputStream()
+        val actual = fileHandler.download(downloadFileDto, "10.1.1.1", outputStream)
 
         // then
         assertThat(actual).isInstanceOf(Success::class.java)
-        assertThat((actual as Success).value).exists()
+        assertThat((outputStream.toString(StandardCharsets.UTF_8))).isEqualTo("FileContent")
     }
 
     @Test
@@ -299,7 +302,7 @@ internal class FileHandlerTest : KoinTest {
         )
 
         // when
-        val actual = fileHandler.download(downloadFileDto, "10.1.1.1")
+        val actual = fileHandler.download(downloadFileDto, "10.1.1.1", ByteArrayOutputStream())
 
         // then
         assertThat(actual).isInstanceOf(Failure::class.java)
@@ -324,7 +327,7 @@ internal class FileHandlerTest : KoinTest {
         }
 
         // when
-        val actual = fileHandler.download(downloadFileDto, "10.1.1.1")
+        val actual = fileHandler.download(downloadFileDto, "10.1.1.1", ByteArrayOutputStream())
 
         // then
         assertThat(actual).isInstanceOf(Failure::class.java)
@@ -391,7 +394,7 @@ internal class FileHandlerTest : KoinTest {
         }
     }
 
-    private fun createMultipartData (filenames: List<String>, inputStream: InputStream = byteArrayOf(1, 2, 3).inputStream()): MultiPartData {
+    private fun createMultipartData(filenames: List<String>, inputStream: InputStream = byteArrayOf(1, 2, 3).inputStream()): MultiPartData {
         val fileItems = filenames.map {
             PartData.FileItem({ inputStream.asInput() }, {}, headersOf(
                 HttpHeaders.ContentDisposition,
@@ -420,13 +423,15 @@ internal class FileHandlerTest : KoinTest {
         val owner = persistUser("poisonedyouth")
         val encryptionResult = EncryptionManager.encryptSteam(
             "FileContent".byteInputStream(),
-            tempFile
+            tempFile,
+            "secret.txt"
         )
         val uploadFile = UploadFile(
             filename = "secret.txt",
             encryptedFilename = "encrypted",
             encryptionResult = encryptionResult.second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 256,

@@ -78,7 +78,8 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
             encryptedFilename = "encryptedfilename",
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
@@ -88,7 +89,8 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
                 iterationCount = 10000,
                 gcmParameterSpecLength = 128
             ),
-            owner = owner
+            owner = owner,
+            mimeType = "text/plain",
         )
         val uploadFileHistory = UploadFileHistory(
             ipAddress = "10.0.0.1",
@@ -135,9 +137,11 @@ internal class UploadFileHistoryRepositoryTest : KoinTest {
             encryptedFilename = encryptedName,
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,

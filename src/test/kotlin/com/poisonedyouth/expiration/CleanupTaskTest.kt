@@ -69,9 +69,11 @@ internal class CleanupTaskTest : KoinTest {
             encryptedFilename = tempFile.fileName.name,
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,
@@ -102,9 +104,11 @@ internal class CleanupTaskTest : KoinTest {
             encryptedFilename = tempFile.fileName.name,
             encryptionResult = EncryptionManager.encryptSteam(
                 "FileContent".byteInputStream(),
-                tempFile
+                tempFile,
+                "secret.txt"
             ).second,
             owner = owner,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 64,

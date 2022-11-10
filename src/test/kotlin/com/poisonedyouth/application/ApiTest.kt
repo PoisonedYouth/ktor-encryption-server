@@ -36,10 +36,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
-import io.ktor.util.cio.writeChannel
-import io.ktor.utils.io.copyAndClose
 import io.ktor.utils.io.readUTF8Line
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readBytes
 import kotlinx.coroutines.Dispatchers
@@ -53,8 +50,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.*
 
@@ -306,13 +301,15 @@ class ApiTest : KoinTest {
 
         val encryptionResult = EncryptionManager.encryptSteam(
             "FileContent".byteInputStream(),
-            tempFile
+            tempFile,
+            "secret.txt"
         )
         val uploadFile = UploadFile(
             filename = "secret.txt",
             encryptedFilename = "encrypted",
             encryptionResult = encryptionResult.second,
             owner = user,
+            mimeType = "text/plain",
             settings = SecuritySettings(
                 fileIntegrityCheckHashingAlgorithm = "SHA-512",
                 passwordKeySizeBytes = 256,

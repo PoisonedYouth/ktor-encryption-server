@@ -5,10 +5,10 @@ import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.application.ErrorCode.DESERIALIZATION_ERROR
 import com.poisonedyouth.application.FileHandler
 import com.poisonedyouth.application.UploadFileHistoryService
-import com.poisonedyouth.application.deleteDirectoryRecursively
 import com.poisonedyouth.plugins.ENCRYPTED_FILENAME_QUERY_PARAM
 import com.poisonedyouth.plugins.PASSWORD_QUERY_PARAM
 import com.poisonedyouth.plugins.handleFailureResponse
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -17,8 +17,7 @@ import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondFile
-import kotlin.io.path.name
+import io.ktor.server.response.respondOutputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -88,29 +87,40 @@ class UploadFileControllerImpl(
         val password = queryParameters[PASSWORD_QUERY_PARAM]
         val encryptedFilename = queryParameters[ENCRYPTED_FILENAME_QUERY_PARAM]
         try {
-            val result =
-                if (encryptedFilename != null && password != null) {
-                    fileHandler.download(
-                        DownloadFileDto(
-                            filename = encryptedFilename,
-                            password = password
-                        ),
-                        ipAddress = call.request.origin.remoteHost
-                    )
-                } else {
-                    fileHandler.download(
-                        downloadFileDto = call.receive(),
-                        ipAddress = call.request.origin.host
-                    )
-                }
-            when (result) {
-                is Success -> call.respondFile(
-                    baseDir = result.value.parent.toFile(),
-                    fileName = result.value.fileName.name
-                )
-                    .also { deleteDirectoryRecursively(result.value.parent) }
+            if (encryptedFilename != null && password != null) {
+                when (val result = fileHandler.getContentType(DownloadFileDto(password = password, filename = encryptedFilename))) {
+                    is Success -> call.respondOutputStream(
+                        status = HttpStatusCode.OK,
+                        contentType = ContentType.parse(result.value)
+                    ) {
+                        fileHandler.download(
+                            DownloadFileDto(
+                                filename = encryptedFilename,
+                                password = password
+                            ),
+                            ipAddress = call.request.origin.remoteHost,
+                            outputStream = this
+                        )
+                    }
 
-                is Failure -> handleFailureResponse(call, result)
+                    is Failure -> handleFailureResponse(call, result)
+                }
+            } else {
+                val downloadFileDto = call.receive<DownloadFileDto>()
+                when (val result = fileHandler.getContentType(downloadFileDto)) {
+                    is Success -> call.respondOutputStream(
+                        status = HttpStatusCode.OK,
+                        contentType = ContentType.parse(result.value)
+                    ) {
+                        fileHandler.download(
+                            downloadFileDto = downloadFileDto,
+                            ipAddress = call.request.origin.remoteHost,
+                            outputStream = this
+                        )
+                    }
+
+                    is Failure -> handleFailureResponse(call, result)
+                }
             }
         } catch (e: Exception) {
             logger.error("Failed to transform body.", e)

@@ -167,6 +167,6 @@ see https://ktor.io/docs/configurations.html#command-line)
 The next topics I will work on:
 
 - Add OpenAPI specification
-- Optimize serving download content (not storing decrypted version on server until request is finished but directly
-  streaming to consumer)
+- ~~Optimize serving download content (not storing decrypted version on server until request is finished but directly
+  streaming to consumer)~~
 - Add client for better usability

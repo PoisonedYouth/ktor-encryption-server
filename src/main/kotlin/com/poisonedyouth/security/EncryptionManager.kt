@@ -1,5 +1,7 @@
 package com.poisonedyouth.security
 
+import com.poisonedyouth.application.ApplicationServiceException
+import com.poisonedyouth.application.ErrorCode.NOT_ACCEPTED_MIME_TYPE
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.domain.SecuritySettings
 import javax.crypto.Cipher
@@ -12,9 +14,14 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.path.inputStream
 import kotlin.io.path.outputStream
+import org.apache.tika.config.TikaConfig
+import org.apache.tika.io.TikaInputStream
+import org.apache.tika.metadata.Metadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.file.Path
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -91,8 +98,8 @@ object EncryptionManager {
         encryptionResult: FileEncryptionResult,
         settings: SecuritySettings,
         encryptedFile: Path,
-        outputFile: Path
-    ): Path {
+        outputStream: OutputStream
+    ) {
         try {
             val key: SecretKey = generateSecretKey(
                 password = password,
@@ -105,16 +112,13 @@ object EncryptionManager {
 
             val messageDigest = getMessageDigest()
 
+            // Verify Integrity
             val cipherInputStream = CipherInputStream(encryptedFile.inputStream(), cipher)
-            outputFile.outputStream().use {
-                cipherInputStream.use { encryptedInputStream ->
-                    val buffer = ByteArray(cipher.blockSize)
-                    var nread: Int
-                    while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
-                        it.write(buffer, 0, nread)
-                        messageDigest.update(buffer, 0, nread)
-                    }
-                    it.flush()
+            cipherInputStream.use { encryptedInputStream ->
+                val buffer = ByteArray(cipher.blockSize)
+                var nread: Int
+                while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
+                    messageDigest.update(buffer, 0, nread)
                 }
             }
             val digest = messageDigest.digest()
@@ -124,7 +128,17 @@ object EncryptionManager {
                         "${encryptionResult.hashSum.contentToString()}, got: ${digest.contentToString()})."
                 )
             }
-            return outputFile
+            outputStream.use {
+                CipherInputStream(encryptedFile.inputStream(), cipher).use { encryptedInputStream ->
+                    val buffer = ByteArray(cipher.blockSize)
+                    var nread: Int
+                    while (encryptedInputStream.read(buffer).also { nread = it } > 0) {
+                        it.write(buffer, 0, nread)
+                        messageDigest.update(buffer, 0, nread)
+                    }
+                    it.flush()
+                }
+            }
         } catch (e: Exception) {
             logger.error("Failed to decrypt file '$encryptedFile'.", e)
             throw EncryptionException("Failed to decrypt file '$encryptedFile'.")
@@ -132,7 +146,7 @@ object EncryptionManager {
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    fun encryptSteam(inputStream: InputStream, path: Path): Pair<String, FileEncryptionResult> {
+    fun encryptSteam(inputStream: InputStream, path: Path, name: String): Pair<String, FileEncryptionResult> {
         try {
             val password = PasswordManager.createRandomPassword()
             val salt = generateSalt()
@@ -151,16 +165,24 @@ object EncryptionManager {
 
             val digest = getMessageDigest()
 
+
+            val baos = ByteArrayOutputStream()
             CipherOutputStream(path.outputStream(), cipher).use { encryptedOutputStream ->
                 val buffer = ByteArray(cipher.blockSize)
                 var nread: Int
                 while (inputStream.read(buffer).also { nread = it } > 0) {
                     encryptedOutputStream.write(buffer, 0, nread)
                     digest.update(buffer, 0, nread)
+                    baos.write(buffer, 0, nread)
                 }
                 encryptedOutputStream.flush()
             }
             inputStream.close()
+
+            // Validate mime type
+            validateMimeType(baos.toByteArray().inputStream(), name)
+
+
             return Pair(
                 password, FileEncryptionResult(
                     initializationVector = cipher.iv,
@@ -169,9 +191,21 @@ object EncryptionManager {
                     salt = salt
                 )
             )
+        } catch (e: ApplicationServiceException) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to encrypt stream.", e)
             throw EncryptionException("Failed to encrypt stream.")
+        }
+    }
+
+    private fun validateMimeType(inputStream: InputStream, name: String?) {
+        val tika = TikaConfig()
+        val metadata = Metadata()
+        val mimetype = tika.detector.detect(TikaInputStream.get(inputStream), metadata)
+        val validMimeTypes = ApplicationConfiguration.uploadSettings.validMimeTypes
+        if (!validMimeTypes.contains(mimetype.baseType.toString())) {
+            throw ApplicationServiceException(errorCode = NOT_ACCEPTED_MIME_TYPE, "Given mimetype of upload '$name' (${mimetype.type}) is not one of ($validMimeTypes).")
         }
     }
 
