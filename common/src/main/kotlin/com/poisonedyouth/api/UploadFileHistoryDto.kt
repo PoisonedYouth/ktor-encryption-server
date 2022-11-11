@@ -1,6 +1,5 @@
 package com.poisonedyouth.api
 
-import com.poisonedyouth.domain.UploadAction
 import java.time.LocalDateTime
 
 data class UploadFileHistoryDto(
