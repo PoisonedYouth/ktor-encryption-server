@@ -76,6 +76,9 @@ dependencies {
     implementation("org.postgresql:postgresql:42.5.0")
     implementation("com.h2database:h2:2.1.214")
 
+    // common
+    implementation(project(":common"))
+
     // liquibase
     implementation("org.liquibase:liquibase-core:4.15.0")
 

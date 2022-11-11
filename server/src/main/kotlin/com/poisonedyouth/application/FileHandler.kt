@@ -10,8 +10,8 @@ import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.ErrorCode.UPLOAD_SIZE_LIMIT_EXCEEDED
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.configuration.ApplicationConfiguration
-import com.poisonedyouth.domain.UploadAction.DOWNLOAD
-import com.poisonedyouth.domain.UploadAction.UPLOAD
+import com.poisonedyouth.api.UploadAction.DOWNLOAD
+import com.poisonedyouth.api.UploadAction.UPLOAD
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.toUploadFileOverviewDto

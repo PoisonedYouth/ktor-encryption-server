@@ -1,6 +1,6 @@
 package com.poisonedyouth.persistence
 
-import com.poisonedyouth.domain.UploadAction
+import com.poisonedyouth.api.UploadAction
 import com.poisonedyouth.domain.UploadFileHistory
 import com.poisonedyouth.domain.User
 import org.jetbrains.exposed.sql.transactions.transaction

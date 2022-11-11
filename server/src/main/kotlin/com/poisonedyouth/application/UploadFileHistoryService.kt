@@ -3,7 +3,7 @@ package com.poisonedyouth.application
 import com.poisonedyouth.api.UploadFileHistoryDto
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
-import com.poisonedyouth.domain.UploadAction
+import com.poisonedyouth.api.UploadAction
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.UploadFileHistory
 import com.poisonedyouth.persistence.UploadFileHistoryRepository

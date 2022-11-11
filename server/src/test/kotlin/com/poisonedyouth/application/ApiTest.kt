@@ -11,7 +11,7 @@ import com.poisonedyouth.api.UserSettingsDto
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.createHttpClient
 import com.poisonedyouth.domain.SecuritySettings
-import com.poisonedyouth.domain.UploadAction
+import com.poisonedyouth.api.UploadAction
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.UserSettings

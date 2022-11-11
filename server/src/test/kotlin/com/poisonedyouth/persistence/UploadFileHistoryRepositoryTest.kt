@@ -2,7 +2,7 @@ package com.poisonedyouth.persistence
 
 import com.poisonedyouth.KtorServerExtension
 import com.poisonedyouth.domain.SecuritySettings
-import com.poisonedyouth.domain.UploadAction.UPLOAD
+import com.poisonedyouth.api.UploadAction.UPLOAD
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.UploadFileHistory
 import com.poisonedyouth.domain.User

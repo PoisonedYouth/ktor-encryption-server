@@ -17,6 +17,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class UserControllerTest : KoinTest {
     private val userRepository by inject<UserRepository>()
 

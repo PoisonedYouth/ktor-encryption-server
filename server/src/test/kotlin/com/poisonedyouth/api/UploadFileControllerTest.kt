@@ -20,6 +20,7 @@ import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.util.InternalAPI
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -30,6 +31,7 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class UploadFileControllerTest : KoinTest {
     private val userRepository by inject<UserRepository>()
     private val uploadFileRepository by inject<UploadFileRepository>()

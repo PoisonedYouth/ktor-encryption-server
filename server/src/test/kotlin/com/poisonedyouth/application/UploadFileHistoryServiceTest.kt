@@ -4,7 +4,7 @@ import com.poisonedyouth.KtorServerExtension
 import com.poisonedyouth.application.ApiResult.Failure
 import com.poisonedyouth.application.ApiResult.Success
 import com.poisonedyouth.domain.SecuritySettings
-import com.poisonedyouth.domain.UploadAction
+import com.poisonedyouth.api.UploadAction
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.UserSettings

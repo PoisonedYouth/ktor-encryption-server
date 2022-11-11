@@ -1,5 +1,6 @@
 package com.poisonedyouth.domain
 
+import com.poisonedyouth.api.UploadAction
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -9,8 +10,3 @@ data class UploadFileHistory(
     val action: UploadAction,
     val uploadFile: UploadFile
 )
-
-enum class UploadAction {
-    UPLOAD,
-    DOWNLOAD
-}
