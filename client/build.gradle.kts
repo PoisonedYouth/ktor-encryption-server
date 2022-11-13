@@ -24,6 +24,9 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
 
+    // cli
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
+
     implementation(project(":common"))
 }
 
