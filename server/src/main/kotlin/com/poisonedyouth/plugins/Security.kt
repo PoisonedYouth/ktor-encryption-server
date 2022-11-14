@@ -24,7 +24,7 @@ fun Application.configureSecurity() {
     install(StatusPages) {
         status(HttpStatusCode.Unauthorized) { call, _ ->
             call.respond(
-                HttpStatusCode.Unauthorized, "Not authorized to upload files."
+                HttpStatusCode.Unauthorized, "You need to be authorized for requested operation."
             )
         }
     }
