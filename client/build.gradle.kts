@@ -20,9 +20,11 @@ repositories {
 dependencies {
     // ktor
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth:$ktorVersion")
+
 
     // cli
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
