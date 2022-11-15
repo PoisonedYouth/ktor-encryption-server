@@ -49,7 +49,7 @@ fun main(args: Array<String>) {
             fullName = "newPassword",
             shortName = "np",
             description = "The new password for the user"
-        ).required()
+        )
 
         override fun execute() {
             runBlocking {
@@ -64,12 +64,34 @@ fun main(args: Array<String>) {
         }
     }
 
+    class UpdateUserSettingsCommand : Subcommand("updateUserSettings", "Update User Settings"){
+        val uploadFileExpirationDays by parser.option(
+            type = ArgType.Int,
+            fullName = "uploadFileExpirationDays",
+            shortName = "ed",
+            description = "The expiration days for upload files"
+        ).required()
+
+        override fun execute() {
+            runBlocking {
+                updateUserSettings(
+                    client = createAuthenticatedHttpClient(
+                        username = username,
+                        password = password
+                    ),
+                    uploadFileExpirationDays = uploadFileExpirationDays
+                )
+            }
+        }
+    }
+
 
 
     parser.subcommands(
         NewUserCommand(),
         DeleteUserCommand(),
-        UpdateUserPasswordCommand()
+        UpdateUserPasswordCommand(),
+        UpdateUserSettingsCommand()
     )
 
     parser.parse(args)

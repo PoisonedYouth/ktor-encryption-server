@@ -1,5 +1,6 @@
 import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UserDto
+import com.poisonedyouth.api.UserSettingsDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -46,7 +47,11 @@ suspend fun deleteExistingUser(client: HttpClient) {
     }
 }
 
-suspend fun updateUserPassword(client: HttpClient, newPassword: String) {
+suspend fun updateUserPassword(client: HttpClient, newPassword: String?) {
+    if (newPassword == null) {
+        println("Missing parameter '-np'")
+        return
+    }
     val result = client.put("$BASE_URL/user/password") {
         setBody(
             UpdatePasswordDto(
@@ -62,6 +67,28 @@ suspend fun updateUserPassword(client: HttpClient, newPassword: String) {
         println("Update of user password failed because of '${result.bodyAsText()}' (${result.status})")
     }
 }
+
+suspend fun updateUserSettings(client: HttpClient, uploadFileExpirationDays: Int?) {
+    if (uploadFileExpirationDays == null) {
+        println("Missing parameter '-ed'")
+        return
+    }
+    val result = client.put("$BASE_URL/user/settings") {
+        setBody(
+            UserSettingsDto(
+                uploadFileExpirationDays = uploadFileExpirationDays.toLong()
+            )
+        )
+        contentType(ContentType.Application.Json)
+    }
+    if (result.status == HttpStatusCode.OK) {
+        val success = result.body<Success<String>>()
+        println(success.value)
+    } else {
+        println("Update of user settings failed because of '${result.bodyAsText()}' (${result.status})")
+    }
+}
+
 
 fun createHttpClient() = HttpClient(OkHttp) {
     install(ContentNegotiation) {
