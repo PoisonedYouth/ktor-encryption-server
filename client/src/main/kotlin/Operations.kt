@@ -1,4 +1,5 @@
 import com.poisonedyouth.api.UpdatePasswordDto
+import com.poisonedyouth.api.UploadFileDto
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.api.UserSettingsDto
 import io.ktor.client.HttpClient
@@ -9,14 +10,22 @@ import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
+import kotlin.io.path.readBytes
+import java.nio.file.Files
+import java.nio.file.Paths
 
 const val BASE_URL = "http://0.0.0.0:8080/api"
 suspend fun createNewUser(client: HttpClient, username: String, userPassword: String) {
@@ -86,6 +95,36 @@ suspend fun updateUserSettings(client: HttpClient, uploadFileExpirationDays: Int
         println(success.value)
     } else {
         println("Update of user settings failed because of '${result.bodyAsText()}' (${result.status})")
+    }
+}
+
+suspend fun uploadFiles(client: HttpClient, uploadFiles: List<String>) {
+    if (uploadFiles.isEmpty()) {
+        print("Missing parameter '-f'")
+    }
+    val files = uploadFiles.map {
+        val path = Paths.get(it)
+        if (Files.notExists(path)) {
+            print("File '$it' does not exist.")
+            return
+        }
+        path
+    }
+    val result = client.submitFormWithBinaryData(
+        url = "http://localhost:8080/api/upload",
+        formData = formData {
+            files.forEach {
+                append("file", it.readBytes(), Headers.build {
+                    append(HttpHeaders.ContentDisposition, "filename=${it.fileName}")
+                })
+            }
+        }
+    )
+    if (result.status == HttpStatusCode.Created) {
+        val success = result.body<Success<List<UploadFileDto>>>()
+        print(success.value)
+    } else {
+        println("Upload of upload files failed because of '${result.bodyAsText()}' (${result.status})")
     }
 }
 

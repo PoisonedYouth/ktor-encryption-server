@@ -2,6 +2,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
+import kotlinx.cli.multiple
 import kotlinx.cli.required
 import kotlinx.coroutines.runBlocking
 
@@ -64,13 +65,13 @@ fun main(args: Array<String>) {
         }
     }
 
-    class UpdateUserSettingsCommand : Subcommand("updateUserSettings", "Update User Settings"){
+    class UpdateUserSettingsCommand : Subcommand("updateUserSettings", "Update User Settings") {
         val uploadFileExpirationDays by parser.option(
             type = ArgType.Int,
             fullName = "uploadFileExpirationDays",
             shortName = "ed",
             description = "The expiration days for upload files"
-        ).required()
+        )
 
         override fun execute() {
             runBlocking {
@@ -85,13 +86,35 @@ fun main(args: Array<String>) {
         }
     }
 
+    class UploadFilesCommand: Subcommand("uploadFiles", "Upload Files") {
+        val uploadFiles by parser.option(
+            type = ArgType.String,
+            fullName = "uploadFiles",
+            shortName = "f",
+            description = "The files to upload to server"
+        ).multiple()
+
+        override fun execute() {
+            runBlocking {
+                uploadFiles(
+                    client = createAuthenticatedHttpClient(
+                        username = username,
+                        password = password
+                    ),
+                    uploadFiles = uploadFiles
+                )
+            }
+        }
+    }
+
 
 
     parser.subcommands(
         NewUserCommand(),
         DeleteUserCommand(),
         UpdateUserPasswordCommand(),
-        UpdateUserSettingsCommand()
+        UpdateUserSettingsCommand(),
+        UploadFilesCommand()
     )
 
     parser.parse(args)
