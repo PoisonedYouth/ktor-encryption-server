@@ -1,6 +1,7 @@
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UploadFileDto
+import com.poisonedyouth.api.UploadFileHistoryDto
 import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.api.UserSettingsDto
@@ -133,8 +134,18 @@ suspend fun uploadFiles(client: HttpClient, uploadFiles: List<String>) {
 
 suspend fun getUploadFilesOverview(client: HttpClient) {
     val result = client.get("$BASE_URL/upload")
-    if (result.status == Companion.OK) {
+    if (result.status == HttpStatusCode.OK) {
         val success = result.body<Success<List<UploadFileOverviewDto>>>()
+        println(success.value)
+    } else {
+        println("Get Upload File History failed because of '${result.bodyAsText()}' (${result.status})")
+    }
+}
+
+suspend fun getUploadFilesHistory(client: HttpClient) {
+    val result = client.get("$BASE_URL/upload/history")
+    if (result.status == HttpStatusCode.OK) {
+        val success = result.body<Success<List<UploadFileHistoryDto>>>()
         println(success.value)
     } else {
         println("Get Upload File History failed because of '${result.bodyAsText()}' (${result.status})")
@@ -150,7 +161,7 @@ fun createHttpClient() = HttpClient(OkHttp) {
 
 fun createAuthenticatedHttpClient(username: String, password: String) = HttpClient(OkHttp) {
     install(ContentNegotiation) {
-        jackson{
+        jackson {
             registerModule(JavaTimeModule())
         }
     }

@@ -107,10 +107,23 @@ fun main(args: Array<String>) {
         }
     }
 
-    class GetUploadFilesCommand: Subcommand("getUploadFileOverview", "Get Active Upload File Overview"){
+    class GetUploadFilesCommand: Subcommand("getUploadFilesOverview", "Get Active Upload File Overview"){
         override fun execute() {
             runBlocking {
                 getUploadFilesOverview(
+                    client = createAuthenticatedHttpClient(
+                        username = username,
+                        password = password
+                    ),
+                )
+            }
+        }
+    }
+
+    class GetUploadFilesHistoryCommand: Subcommand("getUploadFilesHistory", "Get Active Upload File History"){
+        override fun execute() {
+            runBlocking {
+                getUploadFilesHistory(
                     client = createAuthenticatedHttpClient(
                         username = username,
                         password = password
@@ -128,7 +141,8 @@ fun main(args: Array<String>) {
         UpdateUserPasswordCommand(),
         UpdateUserSettingsCommand(),
         UploadFilesCommand(),
-        GetUploadFilesCommand()
+        GetUploadFilesCommand(),
+        GetUploadFilesHistoryCommand()
     )
 
     parser.parse(args)
