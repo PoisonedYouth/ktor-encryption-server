@@ -348,6 +348,26 @@ internal class FileHandlerTest : KoinTest {
     }
 
     @Test
+    fun `delete returns failure if deletion of upload file fails`() = runTest {
+        //given
+        mockkObject(UploadFileEntity)
+        every {
+            UploadFileEntity.findByEncryptedFilenameAndUser(any(), any())
+        } returns null
+
+        val uploadResult = createUploadResult()
+
+        // when
+        val actual = fileHandler.delete(uploadResult.second.owner!!.username, "encrypted")
+
+        // then
+        assertThat(actual).isInstanceOf(Failure::class.java)
+        assertThat((actual as Failure).errorCode).isEqualTo(ErrorCode.FAILED_TO_DELETE_FILE)
+
+        unmockkObject(UploadFileEntity)
+    }
+
+    @Test
     fun `delete returns failure if user does not exist`() = runTest {
         // given
         persistUser("poisonedyouth")
@@ -370,7 +390,6 @@ internal class FileHandlerTest : KoinTest {
 
         // then
         assertThat(actual).isInstanceOf(Success::class.java)
-        assertThat((actual as Success).value).isTrue()
     }
 
 

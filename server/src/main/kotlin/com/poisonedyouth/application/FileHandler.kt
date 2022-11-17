@@ -1,17 +1,18 @@
 package com.poisonedyouth.application
 
 import com.poisonedyouth.api.DownloadFileDto
+import com.poisonedyouth.api.UploadAction.DOWNLOAD
+import com.poisonedyouth.api.UploadAction.UPLOAD
 import com.poisonedyouth.api.UploadFileDto
 import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.application.ApiResult.*
+import com.poisonedyouth.application.ErrorCode.FAILED_TO_DELETE_FILE
 import com.poisonedyouth.application.ErrorCode.FILE_NOT_FOUND
 import com.poisonedyouth.application.ErrorCode.MISSING_HEADER
 import com.poisonedyouth.application.ErrorCode.MISSING_PARAMETER
 import com.poisonedyouth.application.ErrorCode.UPLOAD_SIZE_LIMIT_EXCEEDED
 import com.poisonedyouth.application.ErrorCode.USER_NOT_FOUND
 import com.poisonedyouth.configuration.ApplicationConfiguration
-import com.poisonedyouth.api.UploadAction.DOWNLOAD
-import com.poisonedyouth.api.UploadAction.UPLOAD
 import com.poisonedyouth.domain.UploadFile
 import com.poisonedyouth.domain.User
 import com.poisonedyouth.domain.toUploadFileOverviewDto
@@ -38,7 +39,7 @@ interface FileHandler {
     ): ApiResult<List<UploadFileDto>>
 
     suspend fun download(downloadFileDto: DownloadFileDto, ipAddress: String, outputStream: OutputStream): ApiResult<Unit>
-    suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean>
+    suspend fun delete(username: String, encryptedFilename: String?): ApiResult<String>
 
     suspend fun getContentType(downloadFileDto: DownloadFileDto): ApiResult<String>
 }
@@ -178,14 +179,17 @@ class FileHandlerImpl(
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // It's intended to catch all exceptions in this layer
-    override suspend fun delete(username: String, encryptedFilename: String?): ApiResult<Boolean> {
+    override suspend fun delete(username: String, encryptedFilename: String?): ApiResult<String> {
         logger.info("Start deleting upload file '$encryptedFilename'for user '$username'...")
         return try {
             if (encryptedFilename == null) {
                 throw ApplicationServiceException(MISSING_PARAMETER, "Required parameter 'encryptedfilename' missing.")
             }
             logger.info("Deleted upload file  with encrypted filename '$encryptedFilename' for user '$username'.")
-            Success(uploadFileRepository.deleteBy(username, encryptedFilename))
+            if (!uploadFileRepository.deleteBy(username, encryptedFilename)) {
+                throw ApplicationServiceException(FAILED_TO_DELETE_FILE, "The upload file '$encryptedFilename' could not be deleted.")
+            }
+            return Success("Successfully deleted upload file '$encryptedFilename'")
         } catch (e: GeneralException) {
             Failure(e.errorCode, e.message)
         }
