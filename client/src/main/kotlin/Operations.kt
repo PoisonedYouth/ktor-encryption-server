@@ -16,6 +16,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -24,7 +25,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.HttpStatusCode.Companion
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import kotlin.io.path.readBytes
@@ -149,6 +149,22 @@ suspend fun getUploadFilesHistory(client: HttpClient) {
         println(success.value)
     } else {
         println("Get Upload File History failed because of '${result.bodyAsText()}' (${result.status})")
+    }
+}
+
+suspend fun deleteUploadFile(client: HttpClient, uploadFileName: String?) {
+    if (uploadFileName == null) {
+        println("Missing parameter '-fn'")
+        return
+    }
+    val result = client.delete("$BASE_URL/upload") {
+        parameter("encryptedfilename", uploadFileName)
+    }
+    if (result.status == HttpStatusCode.OK) {
+        val success = result.body<Success<String>>()
+        println(success.value)
+    } else {
+        println("Delete Upload File failed because of '${result.bodyAsText()}' (${result.status})")
     }
 }
 

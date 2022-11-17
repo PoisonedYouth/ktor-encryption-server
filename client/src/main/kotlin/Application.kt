@@ -86,7 +86,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    class UploadFilesCommand: Subcommand("uploadFiles", "Upload Files") {
+    class UploadFilesCommand : Subcommand("uploadFiles", "Upload Files") {
         val uploadFiles by parser.option(
             type = ArgType.String,
             fullName = "uploadFiles",
@@ -107,7 +107,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    class GetUploadFilesCommand: Subcommand("getUploadFilesOverview", "Get Active Upload File Overview"){
+    class GetUploadFilesCommand : Subcommand("getUploadFilesOverview", "Get Active Upload File Overview") {
         override fun execute() {
             runBlocking {
                 getUploadFilesOverview(
@@ -120,7 +120,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    class GetUploadFilesHistoryCommand: Subcommand("getUploadFilesHistory", "Get Active Upload File History"){
+    class GetUploadFilesHistoryCommand : Subcommand("getUploadFilesHistory", "Get Active Upload File History") {
         override fun execute() {
             runBlocking {
                 getUploadFilesHistory(
@@ -128,6 +128,27 @@ fun main(args: Array<String>) {
                         username = username,
                         password = password
                     ),
+                )
+            }
+        }
+    }
+
+    class DeleteUploadFileCommand : Subcommand("deleteUploadFile", "Delete Active Upload File") {
+        val uploadFileName by parser.option(
+            type = ArgType.String,
+            fullName = "uploadFileName",
+            shortName = "fn",
+            description = "The name of the upload file"
+        )
+
+        override fun execute() {
+            runBlocking {
+                deleteUploadFile(
+                    client = createAuthenticatedHttpClient(
+                        username = username,
+                        password = password
+                    ),
+                    uploadFileName = uploadFileName
                 )
             }
         }
@@ -142,7 +163,8 @@ fun main(args: Array<String>) {
         UpdateUserSettingsCommand(),
         UploadFilesCommand(),
         GetUploadFilesCommand(),
-        GetUploadFilesHistoryCommand()
+        GetUploadFilesHistoryCommand(),
+        DeleteUploadFileCommand()
     )
 
     parser.parse(args)
