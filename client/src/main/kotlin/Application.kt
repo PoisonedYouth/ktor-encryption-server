@@ -107,6 +107,19 @@ fun main(args: Array<String>) {
         }
     }
 
+    class GetUploadFilesCommand: Subcommand("getUploadFileOverview", "Get Active Upload File Overview"){
+        override fun execute() {
+            runBlocking {
+                getUploadFilesOverview(
+                    client = createAuthenticatedHttpClient(
+                        username = username,
+                        password = password
+                    ),
+                )
+            }
+        }
+    }
+
 
 
     parser.subcommands(
@@ -114,7 +127,8 @@ fun main(args: Array<String>) {
         DeleteUserCommand(),
         UpdateUserPasswordCommand(),
         UpdateUserSettingsCommand(),
-        UploadFilesCommand()
+        UploadFilesCommand(),
+        GetUploadFilesCommand()
     )
 
     parser.parse(args)

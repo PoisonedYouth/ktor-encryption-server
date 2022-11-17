@@ -1,5 +1,7 @@
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.poisonedyouth.api.UpdatePasswordDto
 import com.poisonedyouth.api.UploadFileDto
+import com.poisonedyouth.api.UploadFileOverviewDto
 import com.poisonedyouth.api.UserDto
 import com.poisonedyouth.api.UserSettingsDto
 import io.ktor.client.HttpClient
@@ -12,6 +14,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -111,7 +114,7 @@ suspend fun uploadFiles(client: HttpClient, uploadFiles: List<String>) {
         path
     }
     val result = client.submitFormWithBinaryData(
-        url = "http://localhost:8080/api/upload",
+        url = "$BASE_URL/upload",
         formData = formData {
             files.forEach {
                 append("file", it.readBytes(), Headers.build {
@@ -128,6 +131,16 @@ suspend fun uploadFiles(client: HttpClient, uploadFiles: List<String>) {
     }
 }
 
+suspend fun getUploadFilesOverview(client: HttpClient) {
+    val result = client.get("$BASE_URL/upload")
+    if (result.status == Companion.OK) {
+        val success = result.body<Success<List<UploadFileOverviewDto>>>()
+        println(success.value)
+    } else {
+        println("Get Upload File History failed because of '${result.bodyAsText()}' (${result.status})")
+    }
+}
+
 
 fun createHttpClient() = HttpClient(OkHttp) {
     install(ContentNegotiation) {
@@ -137,7 +150,9 @@ fun createHttpClient() = HttpClient(OkHttp) {
 
 fun createAuthenticatedHttpClient(username: String, password: String) = HttpClient(OkHttp) {
     install(ContentNegotiation) {
-        jackson()
+        jackson{
+            registerModule(JavaTimeModule())
+        }
     }
     install(Auth) {
         basic {

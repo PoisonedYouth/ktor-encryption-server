@@ -24,7 +24,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-auth:$ktorVersion")
-
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4")
 
     // cli
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
