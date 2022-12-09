@@ -6,8 +6,6 @@ import liquibase.configuration.LiquibaseConfiguration
 import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
-import liquibase.resource.FileSystemResourceAccessor
-import java.io.File
 
 fun migrateDatabaseSchema(datasource: HikariDataSource) {
     val database = DatabaseFactory.getInstance()

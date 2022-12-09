@@ -7,11 +7,9 @@ import com.poisonedyouth.expiration.setupCleanupTask
 import com.poisonedyouth.expiration.setupUploadFileExpirationTask
 import com.poisonedyouth.persistence.migrateDatabaseSchema
 import com.poisonedyouth.persistence.setupDatabase
-import com.poisonedyouth.plugins.configureCallLogging
-import com.poisonedyouth.plugins.configureRouting
-import com.poisonedyouth.plugins.configureSecurity
-import com.poisonedyouth.plugins.configureSerialization
+import com.poisonedyouth.plugins.*
 import io.ktor.server.application.Application
+import io.ktor.server.engine.*
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
@@ -28,6 +26,7 @@ fun Application.module() {
     configureSecurity()
     configureRouting()
     configureCallLogging()
+    configureOpenApi()
 
     setupUploadFileExpirationTask()
     setupCleanupTask()

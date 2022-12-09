@@ -1,0 +1,105 @@
+openapi: "3.0.3"
+info:
+  title: "Ktor Encryption Server API"
+  description: "The Rest API for the Ktor Encryption Server"
+  version: "0.0.4"
+  contact:
+    name: Matthias Schenk
+    email: inzuael@googlemail.com
+    url: https://github.com/PoisonedYouth
+servers:
+  - url: "https://localhost:8080"
+paths:
+  /api/download:
+    get:
+      tags:
+        - Upload File
+      description: "Download an uploaded file."
+      security:
+        - basicAuth: [ ]
+      responses:
+        '200':
+          description: "The file is downloaded successfully."
+        '400':
+          description: "The request body cannot be deserialized."
+        '500':
+          description: "Download of file failed (e.g. checksum changed)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DownloadFile'
+
+  /api/upload:
+    delete:
+      tags:
+        - Upload File
+      description: "Delete an upload file."
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - in: query
+          name: "encryptedfilename"
+          example: "b0dd1936-65fc-462a-86a6-78edecc1ba19"
+          required: true
+
+      responses:
+        '200':
+          description: "The upload file is deleted successfully."
+        '401':
+          description: "The authentication failed for the user."
+        '500':
+          description: "Deletion of file failed (e.g. upload file not found on server)."
+    get:
+      tags:
+        - Upload File
+      description: "Download an upload file."
+    post:
+      tags:
+        - Upload File
+      description: "Upload file(s)."
+  /api/upload/history:
+    get:
+      tags:
+        - Upload File
+      description: "Get current upload file history."
+  /api/user:
+    delete:
+      tags:
+        - User
+      description: "Delete user from server."
+    post:
+      tags:
+        - User
+      description: "Create a new user."
+  /api/user/password:
+    put:
+      tags:
+        - User
+      description: "Update password for user."
+  /api/user/settings:
+    put:
+      tags:
+        - User
+      description: "Update settings for user."
+
+components:
+  schemas:
+    DownloadFile:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: "The filename of the upload file."
+          example: "b0dd1936-65fc-462a-86a6-78edecc1ba19"
+        password:
+          type: string
+          description: "The password for the upload file."
+          example: "n¦¤¾t‰0₠DfKv(₾<A"
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+security:
+  - basicAuth: [ ]

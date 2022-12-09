@@ -72,6 +72,9 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
+    // open api
+    implementation("io.ktor:ktor-server-swagger:$ktorVersion")
+
     // database
     implementation("org.postgresql:postgresql:42.5.1")
     implementation("com.h2database:h2:2.1.214")

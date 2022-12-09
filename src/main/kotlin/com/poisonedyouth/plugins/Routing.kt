@@ -23,7 +23,7 @@ suspend fun handleFailureResponse(call: ApplicationCall, failure: Failure) {
         DESERIALIZATION_ERROR,
         MISSING_PARAMETER -> HttpStatusCode.BadRequest
 
-        else -> Companion.InternalServerError
+        else -> HttpStatusCode.InternalServerError
     }
     call.respond(status = httpStatusCode, message = failure.errorMessage)
 }
