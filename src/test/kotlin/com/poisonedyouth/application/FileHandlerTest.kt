@@ -376,11 +376,11 @@ internal class FileHandlerTest : KoinTest {
 
     private fun createRequestConnectionPoint(): RequestConnectionPoint {
         return object : RequestConnectionPoint {
-            override val host: String
+            override val localHost: String
                 get() = "10.1.1.1"
             override val method: HttpMethod
                 get() = TODO("Not yet implemented")
-            override val port: Int
+            override val localPort: Int
                 get() = 8080
             override val remoteHost: String
                 get() = "10.1.1.1"
@@ -390,7 +390,20 @@ internal class FileHandlerTest : KoinTest {
                 get() = TODO("Not yet implemented")
             override val version: String
                 get() = TODO("Not yet implemented")
-
+            override val host: String
+                get() = "10.1.1.1"
+            override val localAddress: String
+                get() = TODO("Not yet implemented")
+            override val port: Int
+                get() = 8080
+            override val remoteAddress: String
+                get() = TODO("Not yet implemented")
+            override val remotePort: Int
+                get() = TODO("Not yet implemented")
+            override val serverHost: String
+                get() = TODO("Not yet implemented")
+            override val serverPort: Int
+                get() = TODO("Not yet implemented")
         }
     }
 

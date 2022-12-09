@@ -10,7 +10,7 @@ val koinVersion: String by project
 plugins {
     application
     kotlin("jvm") version "1.7.10"
-    id("io.ktor.plugin") version "2.1.1"
+    id("io.ktor.plugin") version  "2.2.1"
     id("info.solidsoft.pitest") version "1.9.0"
 }
 
@@ -73,11 +73,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
     // database
-    implementation("org.postgresql:postgresql:42.5.0")
+    implementation("org.postgresql:postgresql:42.5.1")
     implementation("com.h2database:h2:2.1.214")
 
     // liquibase
-    implementation("org.liquibase:liquibase-core:4.15.0")
+    implementation("org.liquibase:liquibase-core:4.17.2")
 
     // koin
     implementation("io.insert-koin:koin-ktor:$koinVersion")

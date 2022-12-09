@@ -3,42 +3,18 @@
 package com.poisonedyouth.application
 
 import com.poisonedyouth.KtorServerExtension
-import com.poisonedyouth.api.UpdatePasswordDto
-import com.poisonedyouth.api.UploadFileHistoryDto
-import com.poisonedyouth.api.UploadFileOverviewDto
-import com.poisonedyouth.api.UserDto
-import com.poisonedyouth.api.UserSettingsDto
+import com.poisonedyouth.api.*
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import com.poisonedyouth.createHttpClient
-import com.poisonedyouth.domain.SecuritySettings
-import com.poisonedyouth.domain.UploadAction
-import com.poisonedyouth.domain.UploadFile
-import com.poisonedyouth.domain.User
-import com.poisonedyouth.domain.UserSettings
-import com.poisonedyouth.persistence.UploadFileEntity
-import com.poisonedyouth.persistence.UploadFileHistoryEntity
-import com.poisonedyouth.persistence.UploadFileRepository
-import com.poisonedyouth.persistence.UserEntity
-import com.poisonedyouth.persistence.UserRepository
+import com.poisonedyouth.domain.*
+import com.poisonedyouth.persistence.*
 import com.poisonedyouth.security.EncryptionManager
-import io.ktor.client.call.body
-import io.ktor.client.request.delete
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.util.InternalAPI
-import io.ktor.utils.io.readUTF8Line
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.readBytes
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.util.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -52,6 +28,8 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import java.nio.file.Files
 import java.util.*
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.readBytes
 
 class ApiTest : KoinTest {
     private val uploadFileRepository by inject<UploadFileRepository>()
@@ -171,9 +149,9 @@ class ApiTest : KoinTest {
         val result = response.body<String>()
         assertThat(result).isNotNull
         assertThat(transaction
-                   {
-                       UserEntity.findUserOrNull("poisonedyouth")!!.userSettings.uploadFileExpirationDays
-                   }).isEqualTo(51)
+        {
+            UserEntity.findUserOrNull("poisonedyouth")!!.userSettings.uploadFileExpirationDays
+        }).isEqualTo(51)
     }
 
     @Test
@@ -184,8 +162,12 @@ class ApiTest : KoinTest {
         val client = createHttpClient(username = user.username, password = "Ab1!999999999999")
 
         // when
-        val uploadFile = Files.createTempFile("file1.txt", "")
-        Files.writeString(uploadFile, "Hello World!")
+        val uploadFile = withContext(Dispatchers.IO) {
+            val uploadFile = Files.createTempFile("file1.txt", "")
+            Files.writeString(uploadFile, "Hello World!")
+            uploadFile
+        }
+
         val response = client.submitFormWithBinaryData(
             url = "http://localhost:8080/api/upload",
             formData = formData {

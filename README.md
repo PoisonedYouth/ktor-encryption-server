@@ -109,14 +109,14 @@ There are three settings available for customization:
 
 This request is adding a new user with given username and password. Additionally a custom expiration period for upload
 files can be specified.
-The username must be unique accross all users and the password musst fulfill the mentioned
+The username must be unique across all users and the password musst fulfill the mentioned
 requirements.
 
 ### Upload files (authenticated: POST: /api/upload)
 
 This request is uploading one or multiple files. Only authenticated user are able to execute this request. The result
 contains a list of upload files consist of original
-filname, the random storage filename, the password for accessing upload and a link for downloading the file and a link
+filename, the random storage filename, the password for accessing upload and a link for downloading the file and a link
 for deleting the file.
 
 ### Download files (GET: /api/download)

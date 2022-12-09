@@ -120,8 +120,8 @@ class FileHandlerImpl(
     private fun buildDeleteLink(origin: RequestConnectionPoint, encryptedFilename: String): String {
         val builder = URLBuilder(
             protocol = URLProtocol.HTTP,
-            host = origin.host,
-            port = origin.port,
+            host = origin.localHost,
+            port = origin.localPort,
             pathSegments = listOf("api", "upload"),
             parameters = parametersOf(ENCRYPTED_FILENAME_QUERY_PARAM to listOf(encryptedFilename))
         )
@@ -131,8 +131,8 @@ class FileHandlerImpl(
     private fun buildDownloadLink(origin: RequestConnectionPoint, encryptedFilename: String, password: String): String {
         val builder = URLBuilder(
             protocol = URLProtocol.HTTP,
-            host = origin.host,
-            port = origin.port,
+            host = origin.localHost,
+            port = origin.localPort,
             pathSegments = listOf("api", "download"),
             parameters = parametersOf(
                 ENCRYPTED_FILENAME_QUERY_PARAM to listOf(encryptedFilename),

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.google.common.jimfs.Jimfs
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.basic
@@ -70,7 +71,7 @@ class KtorServerExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCall
 }
 
 fun createHttpClient(username: String = "username", password: String = "password"): HttpClient {
-    val client = HttpClient {
+    val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
