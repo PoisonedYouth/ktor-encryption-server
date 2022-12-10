@@ -170,3 +170,4 @@ The next topics I will work on:
 - ~~Optimize serving download content (not storing decrypted version on server until request is finished but directly
   streaming to consumer)~~
 - Add client for better usability
+- Make the http response status codes more precise

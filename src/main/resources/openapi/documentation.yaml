@@ -22,6 +22,8 @@ paths:
           description: "The file is downloaded successfully."
         '400':
           description: "The request body cannot be deserialized."
+        '401':
+          description: "The authentication failed for the user."
         '500':
           description: "Download of file failed (e.g. checksum changed)."
       requestBody:
@@ -43,7 +45,6 @@ paths:
           name: "encryptedfilename"
           example: "b0dd1936-65fc-462a-86a6-78edecc1ba19"
           required: true
-
       responses:
         '200':
           description: "The upload file is deleted successfully."
@@ -73,17 +74,63 @@ paths:
       tags:
         - User
       description: "Create a new user."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/User'
+      responses:
+        '201':
+          description: "The user is created successfully."
+        '400':
+          description: "The request body cannot be deserialized or the user with the username already exist v."
+        '500':
+          description: "Not able to create new user (e.g. the password does not fulfill the requirements)."
   /api/user/password:
     put:
       tags:
         - User
       description: "Update password for user."
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/UpdatePassword'
+      responses:
+        '200':
+          description: "The user password is updated successfully."
+        '400':
+          description: "The request body cannot be deserialized."
+        '401':
+          description: "The authentication failed for the user."
+        '500':
+          description: "Not able to update user password (e.g. new password does not fulfill the requirements)."
   /api/user/settings:
     put:
       tags:
         - User
       description: "Update settings for user."
-
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '200':
+          description: "The user settings are updated successfully."
+        '400':
+          description: "The request body cannot be deserialized."
+        '401':
+          description: "The authentication failed for the user."
+        '500':
+          description: "Not able to update user settings (e.g. user not found)."
 components:
   schemas:
     DownloadFile:
@@ -96,6 +143,20 @@ components:
         password:
           type: string
           description: "The password for the upload file."
+          example: "n¦¤¾t‰0₠DfKv(₾<A"
+    UserSettings:
+      type: object
+      properties:
+        uploadFileExpirationDays:
+          type: integer
+          description: "The amount of days "
+          example: 14
+    UpdatePassword:
+      type: object
+      properties:
+        newPassword:
+          type: string
+          description: "The new password for the user."
           example: "n¦¤¾t‰0₠DfKv(₾<A"
   securitySchemes:
     basicAuth:

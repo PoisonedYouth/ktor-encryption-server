@@ -21,6 +21,7 @@ suspend fun handleFailureResponse(call: ApplicationCall, failure: Failure) {
     val httpStatusCode = when (failure.errorCode) {
         NOT_ACCEPTED_MIME_TYPE,
         DESERIALIZATION_ERROR,
+        USER_ALREADY_EXIST,
         MISSING_PARAMETER -> HttpStatusCode.BadRequest
 
         else -> HttpStatusCode.InternalServerError
