@@ -69,12 +69,14 @@ fun Application.setupApplicationConfiguration() {
     // Password Settings
     val passwordSettings = environment.config.config("ktor.passwordSettings")
     val minimumLength = passwordSettings.property("minimumLength").getString().toInt()
+    val maximumLength = passwordSettings.property("maximumLength").getString().toInt()
     val mustContainUpperCase = passwordSettings.property("mustContainUpperCase").getString().toBoolean()
     val mustContainLowerCase = passwordSettings.property("mustContainLowerCase").getString().toBoolean()
     val mustContainDigits = passwordSettings.property("mustContainDigits").getString().toBoolean()
     val mustContainSpecial = passwordSettings.property("mustContainSpecial").getString().toBoolean()
     ApplicationConfiguration.passwordSettings = PasswordSettings(
         minimumLength = minimumLength,
+        maximumLength = maximumLength,
         mustContainDigits = mustContainDigits,
         mustContainUpperCase = mustContainUpperCase,
         mustContainLowerCase = mustContainLowerCase,
@@ -115,6 +117,7 @@ data class UploadSettings(
 
 data class PasswordSettings(
     val minimumLength: Int,
+    val maximumLength: Int,
     val mustContainDigits: Boolean,
     val mustContainUpperCase: Boolean,
     val mustContainLowerCase: Boolean,

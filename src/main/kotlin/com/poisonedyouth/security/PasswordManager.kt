@@ -1,16 +1,8 @@
 package com.poisonedyouth.security
 
 import com.poisonedyouth.configuration.ApplicationConfiguration
-import org.passay.CharacterRule
-import org.passay.EnglishCharacterData.Alphabetical
-import org.passay.EnglishCharacterData.Digit
-import org.passay.EnglishCharacterData.LowerCase
-import org.passay.EnglishCharacterData.Special
-import org.passay.EnglishCharacterData.UpperCase
-import org.passay.LengthRule
-import org.passay.PasswordData
-import org.passay.PasswordGenerator
-import org.passay.PasswordValidator
+import org.passay.*
+import org.passay.EnglishCharacterData.*
 
 object PasswordManager {
     private val characterRules = initCharacterRules()
@@ -36,11 +28,17 @@ object PasswordManager {
         return characterRules
     }
 
-    private fun initLengthRule() = LengthRule(ApplicationConfiguration.passwordSettings.minimumLength)
+    private fun initLengthRule() = LengthRule(
+        ApplicationConfiguration.passwordSettings.minimumLength,
+        ApplicationConfiguration.passwordSettings.maximumLength
+    )
 
 
     fun createRandomPassword(): String {
-        return passwordGenerator.generatePassword(ApplicationConfiguration.passwordSettings.minimumLength, characterRules)
+        return passwordGenerator.generatePassword(
+            ApplicationConfiguration.passwordSettings.minimumLength,
+            characterRules
+        )
     }
 
     fun validatePassword(password: String): List<String> {

@@ -3,6 +3,7 @@ package com.poisonedyouth.security
 import com.poisonedyouth.KtorServerExtension
 import com.poisonedyouth.configuration.ApplicationConfiguration
 import io.ktor.server.config.ApplicationConfig
+import org.apache.commons.lang3.RandomStringUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -47,6 +48,18 @@ internal class PasswordManagerTest {
 
         // then
         assertThat(actual).contains("Password must be 16 or more characters in length.")
+    }
+
+    @Test
+    fun `validatePassword returns validation error if too long`() {
+        // given
+        val password = RandomStringUtils.random(51)
+
+        // when
+        val actual = PasswordManager.validatePassword(password)
+
+        // then
+        assertThat(actual).contains("Password must be no more than 50 characters in length.")
     }
 
     @Test
